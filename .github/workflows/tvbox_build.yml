@@ -196,46 +196,46 @@ jobs:
           fi
           
           # 代码修改，导包
-          sed -i \$'/public class App/i\\
-          import java.util.LinkedHashMap;\\
-          import java.util.Map;\\
-          import com.fongmi.android.tv.bean.Config;\\
-          ' app/src/main/java/com/fongmi/android/tv/App.java
-          # 应用名称修改
+          awk '/public class App/i\
+import java.util.LinkedHashMap;\
+import java.util.Map;\
+import com.fongmi.android.tv.bean.Config;
+' app/src/main/java/com/fongmi/android/tv/App.java > tmp.java && mv tmp.java app/src/main/java/com/fongmi/android/tv/App.java
           if [ -n "${{ github.event.inputs.fongmi_app_name }}" ]; then
             sed -i 's|<string name="app_name">.*</string>|<string name="app_name">${{ github.event.inputs.fongmi_app_name }}</string>|' app/src/main/res/values-zh-rCN/strings.xml
           else
             sed -i 's|<string name="app_name">.*</string>|<string name="app_name">蜂蜜影视</string>|' app/src/main/res/values-zh-rCN/strings.xml
           fi
           # 代码修改，内置源
-          sed -i \$'/public App()/i\\
-          private Map<String, String> sourceMap = new LinkedHashMap<>() {{\\              put("自用(个人维护)", "https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt");\\\
-              put("饭太硬", "http://www.饭太硬.com/tv");\\\
-              put("ok外部", "http://ok321.top/ok");\\\
-              put("王二小(弹幕)", "http://tvbox.王二小放牛娃.top");\\\
-              put("ok内部(弹幕)", "http://ok321.top/tv");\\\
-          }};\\\
-          ' app/src/main/java/com/fongmi/android/tv/App.java
+          awk '/public App()/i\
+private Map<String, String> sourceMap = new LinkedHashMap<>() {{\
+    put("自用(个人维护)", "https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt");\
+    put("饭太硬", "http://www.饭太硬.com/tv");\
+    put("ok外部", "http://ok321.top/ok");\
+    put("王二小(弹幕)", "http://tvbox.王二小放牛娃.top");\
+    put("ok内部(弹幕)", "http://ok321.top/tv");\
+}};
+' app/src/main/java/com/fongmi/android/tv/App.java > tmp.java && mv tmp.java app/src/main/java/com/fongmi/android/tv/App.java
           # manifest修改，避免与原版影视provider冲突
           if [ -f "app/src/main/AndroidManifest.xml" ]; then
             sed -i 's|android:authorities="com\.fongmi\.quickjs\.provider"|android:authorities="com.fongmi.quickjs.provider.yangxiaoge"|' app/src/main/AndroidManifest.xml
           fi
           # 内置源写入数据库
-          sed -i \$'/super.onCreate();/a\\
-          // 添加默认接口\\
-          sourceMap.forEach((name, url) -> {\\
-              Config vodConfig = Config.find(url, 0); // 点播\\
-              if (vodConfig.getName() == null || vodConfig.getName().isEmpty()) {\\
-                  vodConfig.setName(name);\\
-                  vodConfig.update();\\
-              }\\
-              Config liveConfig = Config.find(url, 1); // 直播\\
-              if (liveConfig.getName() == null || liveConfig.getName().isEmpty()) {\\
-                  liveConfig.setName(name);\\
-                  liveConfig.update();\\
-              }\\
-          });' app/src/main/java/com/fongmi/android/tv/App.java
-          # 弹幕开关默认开启
+          awk '/super\\.onCreate();/a\
+// 添加默认接口\
+sourceMap.forEach((name, url) -> {\
+    Config vodConfig = Config.find(url, 0); // 点播\
+    if (vodConfig.getName() == null || vodConfig.getName().isEmpty()) {\
+        vodConfig.setName(name);\
+        vodConfig.update();\
+    }\
+    Config liveConfig = Config.find(url, 1); // 直播\
+    if (liveConfig.getName() == null || liveConfig.getName().isEmpty()) {\
+        liveConfig.setName(name);\
+        liveConfig.update();\
+    }\
+});
+' app/src/main/java/com/fongmi/android/tv/App.java > tmp.java && mv tmp.java app/src/main/java/com/fongmi/android/tv/App.java
           sed -i 's|getBoolean("danmaku_load")|getBoolean("danmaku_load", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
           sed -i 's|getBoolean("danmaku_show")|getBoolean("danmaku_show", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
           # 移除fongmi版的更新检测代码以及toast提示
