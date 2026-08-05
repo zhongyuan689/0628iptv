@@ -195,66 +195,66 @@ jobs:
             exit 1
           fi
           
-          # 代码修改，导包 (使用 Python)
-          python3 -c "
-import re
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
-    content = f.read()
-new_content = re.sub(r'(public class App)', r'import java.util.LinkedHashMap;\nimport java.util.Map;\nimport com.fongmi.android.tv.bean.Config;\n\1', content)
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
-    f.write(new_content)
-"
+          # 代码修改，导包
+          - |
+            python3 << 'PYEOF'
+            import re
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
+                content = f.read()
+            insert = 'import java.util.LinkedHashMap;\nimport java.util.Map;\nimport com.fongmi.android.tv.bean.Config;\n'
+            content = re.sub(r'(public class App)', insert + r'\1', content)
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
+                f.write(content)
+            PYEOF
           if [ -n "${{ github.event.inputs.fongmi_app_name }}" ]; then
             sed -i 's|<string name="app_name">.*</string>|<string name="app_name">${{ github.event.inputs.fongmi_app_name }}</string>|' app/src/main/res/values-zh-rCN/strings.xml
           else
             sed -i 's|<string name="app_name">.*</string>|<string name="app_name">蜂蜜影视</string>|' app/src/main/res/values-zh-rCN/strings.xml
           fi
-          # 代码修改，内置源 (使用 Python)
-          python3 -c "
-import re
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
-    content = f.read()
-new_lines = []
-new_lines.append('private Map<String, String> sourceMap = new LinkedHashMap<>() {{')
-new_lines.append('    put(\"自用(个人维护)\", \"https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt\");')
-new_lines.append('    put(\"饭太硬\", \"http://www.饭太硬.com/tv\");')
-new_lines.append('    put(\"ok外部\", \"http://ok321.top/ok\");')
-new_lines.append('    put(\"王二小(弹幕)\", \"http://tvbox.王二小放牛娃.top\");')
-new_lines.append('    put(\"ok内部(弹幕)\", \"http://ok321.top/tv\");')
-new_lines.append('}};')
-insert = '\n'.join(new_lines)
-content = re.sub(r'(public App())', insert + '\n\1', content)
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
-    f.write(content)
-"
+          # 代码修改，内置源
+          - |
+            python3 << 'PYEOF'
+            import re
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
+                content = f.read()
+            insert = '''private Map<String, String> sourceMap = new LinkedHashMap<>() {{
+                put("自用(个人维护)", "https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt");
+                put("饭太硬", "http://www.饭太硬.com/tv");
+                put("ok外部", "http://ok321.top/ok");
+                put("王二小(弹幕)", "http://tvbox.王二小放牛娃.top");
+                put("ok内部(弹幕)", "http://ok321.top/tv");
+            }};'''
+            content = re.sub(r'(public App\(\)', insert + '\n\1', content)
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
+                f.write(content)
+            PYEOF
           # manifest修改，避免与原版影视provider冲突
           if [ -f "app/src/main/AndroidManifest.xml" ]; then
             sed -i 's|android:authorities="com\.fongmi\.quickjs\.provider"|android:authorities="com.fongmi.quickjs.provider.yangxiaoge"|' app/src/main/AndroidManifest.xml
           fi
-          # 内置源写入数据库 (使用 Python)
-          python3 -c "
-import re
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
-    content = f.read()
-new_lines = []
-new_lines.append('// 添加默认接口')
-new_lines.append('sourceMap.forEach((name, url) -> {')
-new_lines.append('    Config vodConfig = Config.find(url, 0); // 点播')
-new_lines.append('    if (vodConfig.getName() == null || vodConfig.getName().isEmpty()) {')
-new_lines.append('        vodConfig.setName(name);')
-new_lines.append('        vodConfig.update();')
-new_lines.append('    }')
-new_lines.append('    Config liveConfig = Config.find(url, 1); // 直播')
-new_lines.append('    if (liveConfig.getName() == null || liveConfig.getName().isEmpty()) {')
-new_lines.append('        liveConfig.setName(name);')
-new_lines.append('        liveConfig.update();')
-new_lines.append('    }')
-new_lines.append('});')
-insert = '\n'.join(new_lines)
-content = re.sub(r'(super\.onCreate\(\);)', '\1\n' + insert, content)
-with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
-    f.write(content)
-"
+          # 内置源写入数据库
+          - |
+            python3 << 'PYEOF'
+            import re
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'r') as f:
+                content = f.read()
+            insert = '''// 添加默认接口
+            sourceMap.forEach((name, url) -> {
+                Config vodConfig = Config.find(url, 0); // 点播
+                if (vodConfig.getName() == null || vodConfig.getName().isEmpty()) {
+                    vodConfig.setName(name);
+                    vodConfig.update();
+                }
+                Config liveConfig = Config.find(url, 1); // 直播
+                if (liveConfig.getName() == null || liveConfig.getName().isEmpty()) {
+                    liveConfig.setName(name);
+                    liveConfig.update();
+                }
+            });'''
+            content = re.sub(r'(super\.onCreate\(\);)', '\1\n' + insert, content)
+            with open('app/src/main/java/com/fongmi/android/tv/App.java', 'w') as f:
+                f.write(content)
+            PYEOF
           sed -i 's|getBoolean("danmaku_load")|getBoolean("danmaku_load", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
           sed -i 's|getBoolean("danmaku_show")|getBoolean("danmaku_show", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
           # 移除fongmi版的更新检测代码以及toast提示
