@@ -1,0 +1,34 @@
+name: Test Steps Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check New Commit
+        run: |
+          echo "Checking commit..."
+          echo "commit=abc123" >> $GITHUB_ENV
+          echo "commitS=abc1234" >> $GITHUB_ENV
+
+      - name: Check Commit Step
+        if: ${{ env.commit }}
+        run: |
+          echo "Commit env is set: ${{ env.commit }}"
+
+      - name: Setup Python
+        if: ${{ env.commit }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Echo Matrix
+        run: |
+          echo "Done"
