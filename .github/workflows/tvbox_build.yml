@@ -178,14 +178,19 @@ jobs:
         working-directory: TVBoxOSC
         run: |
           echo "这是 FongMi 的专属定制"
+          pwd
+          ls -la
+          ls -la app/ 2>/dev/null || echo "app/ 目录不存在"
           
           # 检查关键文件
           if [ ! -f "app/build.gradle" ]; then
             echo "Error: app/build.gradle not found"
+            find . -name "build.gradle" -type f 2>/dev/null | head -5
             exit 1
           fi
           if [ ! -f "app/src/main/java/com/fongmi/android/tv/App.java" ]; then
             echo "Error: App.java not found"
+            find . -name "App.java" -type f 2>/dev/null | head -5
             exit 1
           fi
           
