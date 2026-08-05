@@ -1,4 +1,4 @@
-name: 编译tvbox
+name: 缂栬瘧tvbox
 
 on:
   schedule:
@@ -6,15 +6,15 @@ on:
   workflow_dispatch:
     inputs:
       rebuild:
-        description: '忽略构建记录以重新构建'
+        description: '蹇界暐鏋勫缓璁板綍浠ラ噸鏂版瀯寤?
         required: false
         type: boolean
       donotpublish:
-        description: '构建后不提交发布新版'
+        description: '鏋勫缓鍚庝笉鎻愪氦鍙戝竷鏂扮増'
         required: false
         type: boolean
       fongmi_app_name:
-        description: '指定要构建的 FongMi 应用名称（如：蜂蜜影视, 影视TV）'
+        description: '鎸囧畾瑕佹瀯寤虹殑 FongMi 搴旂敤鍚嶇О锛堝锛氳渹铚滃奖瑙? 褰辫TV锛?
         required: false
         type: string
 
@@ -51,7 +51,7 @@ jobs:
       - name: Ensure Table Format
         if: ${{ env.commit }}
         run: |
-          # 检查是否存在 Build Time 列，如果不存在则添加
+          # 妫€鏌ユ槸鍚﹀瓨鍦?Build Time 鍒楋紝濡傛灉涓嶅瓨鍦ㄥ垯娣诲姞
           if ! grep -q "| Build Time |" README.md; then
             sed -i '/| Repository.*| Branch.*| Last Update/s/|$/| Build Time |/' README.md
             sed -i '/|--*|--*|--*/s/|$/|--*|/' README.md
@@ -72,7 +72,7 @@ jobs:
           fi
           echo "commit=$commit"
 
-      # - name: 清理旧的构建目录
+      # - name: 娓呯悊鏃х殑鏋勫缓鐩綍
       #   run: rm -rf TVBoxOSC
         
       - name: Checkout Source Code
@@ -93,7 +93,7 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          echo 'crosswalk源，防挂'
+          echo 'crosswalk婧愶紝闃叉寕'
           if grep -q 'crosswalk' build.gradle; then
             sed -i "/crosswalk/a\        maven { url 'https://o0halflife0o.github.io/crosswalk/releases/crosswalk/android/maven2' }" build.gradle
           else
@@ -108,43 +108,43 @@ jobs:
             sed -i 's/minSdkVersion 19/minSdkVersion 21/g' app/build.gradle
           fi
 
-          # 处理 Chaquopy Python 配置
+          # 澶勭悊 Chaquopy Python 閰嶇疆
           if [ -f "chaquo/build.gradle" ]; then
-            echo "检测到 chaquo 模块,开始配置 Python 环境"
+            echo "妫€娴嬪埌 chaquo 妯″潡,寮€濮嬮厤缃?Python 鐜"
           
-            # 验证 Python 3.10
+            # 楠岃瘉 Python 3.10
             python3.10 --version
             PYTHON_PATH=$(which python3.10)
-            echo "Python 路径: $PYTHON_PATH"
+            echo "Python 璺緞: $PYTHON_PATH"
           
-            # 更新 Chaquopy 版本到 15.0.1
+            # 鏇存柊 Chaquopy 鐗堟湰鍒?15.0.1
             sed -i 's/\(com.chaquo.python:gradle:\)[0-9.]\+/\115.0.1/g' build.gradle
           
-            # 在 python 块中添加 buildPython 配置
-            # 在 version "3.10" 这行后面添加 buildPython
+            # 鍦?python 鍧椾腑娣诲姞 buildPython 閰嶇疆
+            # 鍦?version "3.10" 杩欒鍚庨潰娣诲姞 buildPython
             sed -i "/version \"3.10\"/a\            buildPython \"$PYTHON_PATH\"" chaquo/build.gradle
           
-            # 更新 minSdkVersion (如果需要)
+            # 鏇存柊 minSdkVersion (濡傛灉闇€瑕?
             sed -i 's/minSdkVersion 19/minSdkVersion 21/g' chaquo/build.gradle 2>/dev/null || true
             sed -i 's/minSdkVersion 19/minSdkVersion 21/g' app/build.gradle 2>/dev/null || true
           
-            echo "Python 环境配置完成"
+            echo "Python 鐜閰嶇疆瀹屾垚"
           
-            # 显示修改后的配置
-            echo "=== chaquo/build.gradle python 配置 ==="
+            # 鏄剧ず淇敼鍚庣殑閰嶇疆
+            echo "=== chaquo/build.gradle python 閰嶇疆 ==="
             sed -n '/python {/,/^[[:space:]]*}/p' chaquo/build.gradle
           fi
           
-          # 移除 x86 架构
+          # 绉婚櫎 x86 鏋舵瀯
           if [ -f "app/build.gradle" ]; then
             sed -i '/x86 {/,/^[[:space:]]*}/d' app/build.gradle
             sed -i '/^[[:space:]]*$/N;/^\s*\n\s*$/d' app/build.gradle
           
-            # 修改 applicationId 以允许与原版共存
+            # 淇敼 applicationId 浠ュ厑璁镐笌鍘熺増鍏卞瓨
             sed -i 's/applicationId "com\.fongmi\.android\.tv"/applicationId "com.fongmi.tv"/' app/build.gradle
           fi
           
-          # 修改 AndroidManifest.xml
+          # 淇敼 AndroidManifest.xml
           if [ -f "app/src/main/AndroidManifest.xml" ]; then
             sed -i 's/android:authorities="com\.fongmi\.quickjs\.provider"/android:authorities="${applicationId}.quickjs.provider"/' app/src/main/AndroidManifest.xml
           fi
@@ -160,7 +160,7 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          #应用签名修改 
+          #搴旂敤绛惧悕淇敼 
           signingConfigs='ICAgIHNpZ25pbmdDb25maWdzIHtcCiAgICAgICAgaWYgKHByb2plY3QuaGFzUHJvcGVydHkoIlJFTEVBU0VfU1RPUkVfRklMRSIpKSB7XAogICAgICAgICAgICBteUNvbmZpZyB7XAogICAgICAgICAgICAgICAgc3RvcmVGaWxlIGZpbGUoUkVMRUFTRV9TVE9SRV9GSUxFKVwKICAgICAgICAgICAgICAgIHN0b3JlUGFzc3dvcmQgUkVMRUFTRV9TVE9SRV9QQVNTV09SRFwKICAgICAgICAgICAgICAgIGtleUFsaWFzIFJFTEVBU0VfS0VZX0FMSUFTXAogICAgICAgICAgICAgICAga2V5UGFzc3dvcmQgUkVMRUFTRV9LRVlfUEFTU1dPUkRcCiAgICAgICAgICAgICAgICB2MVNpZ25pbmdFbmFibGVkIHRydWVcCiAgICAgICAgICAgICAgICB2MlNpZ25pbmdFbmFibGVkIHRydWVcCiAgICAgICAgICAgICAgICBlbmFibGVWM1NpZ25pbmcgPSB0cnVlXAogICAgICAgICAgICAgICAgZW5hYmxlVjRTaWduaW5nID0gdHJ1ZVwKICAgICAgICAgICAgfVwKICAgICAgICB9XAogICAgfVwKXA=='
           signingConfig='ICAgICAgICAgICAgaWYgKHByb2plY3QuaGFzUHJvcGVydHkoIlJFTEVBU0VfU1RPUkVfRklMRSIpKSB7XAogICAgICAgICAgICAgICAgc2lnbmluZ0NvbmZpZyBzaWduaW5nQ29uZmlncy5teUNvbmZpZ1wKICAgICAgICAgICAgfVwK'
           signingConfigs="$(echo "$signingConfigs" |base64 -d )"
@@ -177,66 +177,63 @@ jobs:
         if: ${{ matrix.userName == 'FongMi' && env.commit }}
         working-directory: TVBoxOSC
         run: |
-          echo "这是 FongMi 的专属定制"
+          echo "杩欐槸 FongMi 鐨勪笓灞炲畾鍒?
           
-          # 检查关键文件是否存在
-          if [ ! -f "app/build.gradle" ]; then
+          # 妫€鏌ュ叧閿枃浠舵槸鍚﹀瓨鍦?          if [ ! -f "app/build.gradle" ]; then
             echo "Error: app/build.gradle not found"
             exit 1
           fi
           
-          # 包名修改 - 使用更宽松的匹配模式
+          # 鍖呭悕淇敼 - 浣跨敤鏇村鏉剧殑鍖归厤妯″紡
           if grep -q 'applicationId.*com\.fongmi\.android' app/build.gradle; then
             sed -i 's/applicationId "com\.fongmi\.android\.tv"/applicationId "com.fongmi.android.tv.yangxiaoge"/g' app/build.gradle
             sed -i "s/applicationId 'com\.fongmi\.android\.tv'/applicationId 'com.fongmi.android.tv.yangxiaoge'/g" app/build.gradle
           fi
           
-          # apk命名增加版本号
-          if grep -q 'outputFileName' app/build.gradle; then
+          # apk鍛藉悕澧炲姞鐗堟湰鍙?          if grep -q 'outputFileName' app/build.gradle; then
             sed -i '/outputFileName.*\.apk"/s/\.apk"/-v${defaultConfig.versionName}.apk"/g' app/build.gradle
             sed -i "/outputFileName.*\.apk'/s/\.apk'/-v${defaultConfig.versionName}.apk'/g" app/build.gradle
           fi
           
-          # 代码修改，导包 - 检查文件存在性
-          if [ -f "app/src/main/java/com/fongmi/android/tv/App.java" ]; then
+          # 浠ｇ爜淇敼锛屽鍖?- 妫€鏌ユ枃浠跺瓨鍦ㄦ€?          if [ -f "app/src/main/java/com/fongmi/android/tv/App.java" ]; then
             sed -i '/public class App/i\
 import java.util.LinkedHashMap;\
 import java.util.Map;\
 import com.fongmi.android.tv.bean.Config;\
 ' app/src/main/java/com/fongmi/android/tv/App.java
             
-            # 应用名称修改
+            # 搴旂敤鍚嶇О淇敼
             if [ -n "${{ github.event.inputs.fongmi_app_name }}" ]; then
               if [ -f "app/src/main/res/values-zh-rCN/strings.xml" ]; then
                 sed -i 's|<string name="app_name">.*</string>|<string name="app_name">${{ github.event.inputs.fongmi_app_name }}</string>|' app/src/main/res/values-zh-rCN/strings.xml
               fi
             else
               if [ -f "app/src/main/res/values-zh-rCN/strings.xml" ]; then
-                sed -i 's|<string name="app_name">.*</string>|<string name="app_name">蜂蜜影视</string>|' app/src/main/res/values-zh-rCN/strings.xml
+                sed -i 's|<string name="app_name">.*</string>|<string name="app_name">铚傝湝褰辫</string>|' app/src/main/res/values-zh-rCN/strings.xml
               fi
             fi
             
-            # 代码修改，内置源
+            # 浠ｇ爜淇敼锛屽唴缃簮
             sed -i '/public App()/i\
   private Map<String, String> sourceMap = new LinkedHashMap<>() {{\
-      put("自用(个人维护)", "https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt");\
-      put("饭太硬", "http://www.饭太硬.com/tv");\
-      put("ok外部", "http://ok321.top/ok");\
-      put("王二小(弹幕)", "http://tvbox.王二小放牛娃.top");\
-      put("ok内部(弹幕)", "http://ok321.top/tv");\
+      put("鑷敤(涓汉缁存姢)", "https://cdn.jsdelivr.net/gh/yangxiaoge/tvbox_cust@master/tvbox/self_use.txt");\
+      put("楗お纭?, "http://www.楗お纭?com/tv");\
+      put("ok澶栭儴", "http://ok321.top/ok");\
+      put("鐜嬩簩灏?寮瑰箷)", "http://tvbox.鐜嬩簩灏忔斁鐗涘▋.top");\
+      put("ok鍐呴儴(寮瑰箷)", "http://ok321.top/tv");\
   }};\
 ' app/src/main/java/com/fongmi/android/tv/App.java
             
-            # 内置源写入数据库
+            # 鍐呯疆婧愬啓鍏ユ暟鎹簱
             sed -i '/super\.onCreate();/a\
-    // 添加默认接口\n\
+    // 娣诲姞榛樿鎺ュ彛\n\
     sourceMap.forEach((name, url) -> {\n\
-        Config vodConfig = Config.find(url, 0); // 点播\n\
+        Config vodConfig = Config.find(url, 0); // 鐐规挱\n\
         if (vodConfig.getName() == null || vodConfig.getName().isEmpty()) {\n\
             vodConfig.setName(name);\n\
             vodConfig.update();\n\
         }\n\
-        Config liveConfig = Config.find(url, 1); // 直播\n\
+        Config liveConfig = Config.find(url, 1); // 鐩存挱\n\
         if (liveConfig.getName() == null || liveConfig.getName().isEmpty()) {\n\
             liveConfig.setName(name);\n\
             liveConfig.update();\n\
@@ -244,19 +241,17 @@ import com.fongmi.android.tv.bean.Config;\
     });' app/src/main/java/com/fongmi/android/tv/App.java
           fi
           
-          # manifest修改，避免与原版影视provider冲突
+          # manifest淇敼锛岄伩鍏嶄笌鍘熺増褰辫provider鍐茬獊
           if [ -f "app/src/main/AndroidManifest.xml" ]; then
             sed -i 's|android:authorities="com\.fongmi\.quickjs\.provider"|android:authorities="com.fongmi.quickjs.provider.yangxiaoge"|' app/src/main/AndroidManifest.xml
           fi
           
-          # 弹幕开关默认开启 - 检查文件存在性
-          if [ -f "app/src/main/java/com/fongmi/android/tv/Setting.java" ]; then
+          # 寮瑰箷寮€鍏抽粯璁ゅ紑鍚?- 妫€鏌ユ枃浠跺瓨鍦ㄦ€?          if [ -f "app/src/main/java/com/fongmi/android/tv/Setting.java" ]; then
             sed -i 's|getBoolean("danmaku_load")|getBoolean("danmaku_load", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
             sed -i 's|getBoolean("danmaku_show")|getBoolean("danmaku_show", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
           fi
           
-          # 移除fongmi版的更新检测代码以及toast提示 - 检查文件存在性
-          if [ -f "app/src/leanback/java/com/fongmi/android/tv/Updater.java" ]; then
+          # 绉婚櫎fongmi鐗堢殑鏇存柊妫€娴嬩唬鐮佷互鍙妕oast鎻愮ず - 妫€鏌ユ枃浠跺瓨鍦ㄦ€?          if [ -f "app/src/leanback/java/com/fongmi/android/tv/Updater.java" ]; then
             sed -i 's/^\(.*App\.execute.*\)/\/\/ \1/' app/src/leanback/java/com/fongmi/android/tv/Updater.java
             sed -i 's/^\(.*Notify\.show.*\)/\/\/ \1/' app/src/leanback/java/com/fongmi/android/tv/Updater.java
           fi
@@ -306,35 +301,31 @@ import com.fongmi.android.tv.bean.Config;\
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          # 尝试获取上一次的 commit hash
+          # 灏濊瘯鑾峰彇涓婁竴娆＄殑 commit hash
           lastCommit=$(grep "\[${{ matrix.userName }}/${{ matrix.repoName }}\]" ${{ github.workspace }}/README.md | grep "${{ matrix.branchName }}" | grep -o '[a-z0-9]\{40\}' | head -1)
           
-          # 如果没有找到 commit hash，使用当前 commit 作为默认值
-          if [ -z "$lastCommit" ]; then
+          # 濡傛灉娌℃湁鎵惧埌 commit hash锛屼娇鐢ㄥ綋鍓?commit 浣滀负榛樿鍊?          if [ -z "$lastCommit" ]; then
             echo "Warning: Could not find last commit hash for ${{ matrix.userName }}/${{ matrix.repoName }}/${{ matrix.branchName }}"
             lastCommit=${{ env.commit }}
           fi
           
           export LESSCHARSET=utf-8
-          # 确保 apk 目录存在
+          # 纭繚 apk 鐩綍瀛樺湪
           mkdir -p apk/
           
-          # 创建 Release log 文件
+          # 鍒涘缓 Release log 鏂囦欢
           echo -e "Credit: [${{ matrix.userName }}](${{ env.upStream }})\nCommit: ${{ env.commit }}\nChangelog:\n\`\`\`" > apk/${{ matrix.userName }}-Release.log
           
-          # 生成 changelog
+          # 鐢熸垚 changelog
           if [ "${{ env.commit }}" == "$lastCommit" ]; then
-            # 单个 commit 的日志
-            git log --pretty=format:%B ${{ env.commitS }} -1 2>/dev/null | sed -e "s# \{2,\}#\n#g" -e "/^Merge \(pull\|branch\|remote\)/d" -e '/^$/d' | cat -n | sort -k2,2 -k1,1n | uniq -f1 | sort -k1,1n | cut -f2- >> apk/${{ matrix.userName }}-Release.log || echo "No changelog available" >> apk/${{ matrix.userName }}-Release.log
+            # 鍗曚釜 commit 鐨勬棩蹇?            git log --pretty=format:%B ${{ env.commitS }} -1 2>/dev/null | sed -e "s# \{2,\}#\n#g" -e "/^Merge \(pull\|branch\|remote\)/d" -e '/^$/d' | cat -n | sort -k2,2 -k1,1n | uniq -f1 | sort -k1,1n | cut -f2- >> apk/${{ matrix.userName }}-Release.log || echo "No changelog available" >> apk/${{ matrix.userName }}-Release.log
           else
-            # commit 范围的日志
-            git log --pretty=format:%B ${{ env.commitS }}...${lastCommit:0:7} 2>/dev/null | sed -e "s# \{2,\}#\n#g" -e "/^Merge \(pull\|branch\|remote\)/d" -e '/^$/d' | cat -n | sort -k2,2 -k1,1n | uniq -f1 | sort -k1,1n | cut -f2- >> apk/${{ matrix.userName }}-Release.log || echo "No changelog available" >> apk/${{ matrix.userName }}-Release.log
+            # commit 鑼冨洿鐨勬棩蹇?            git log --pretty=format:%B ${{ env.commitS }}...${lastCommit:0:7} 2>/dev/null | sed -e "s# \{2,\}#\n#g" -e "/^Merge \(pull\|branch\|remote\)/d" -e '/^$/d' | cat -n | sort -k2,2 -k1,1n | uniq -f1 | sort -k1,1n | cut -f2- >> apk/${{ matrix.userName }}-Release.log || echo "No changelog available" >> apk/${{ matrix.userName }}-Release.log
           fi
           
           echo -e '\`\`\`' >> apk/${{ matrix.userName }}-Release.log
           
-          # 确保日志文件有内容
-          if [ ! -s "apk/${{ matrix.userName }}-Release.log" ]; then
+          # 纭繚鏃ュ織鏂囦欢鏈夊唴瀹?          if [ ! -s "apk/${{ matrix.userName }}-Release.log" ]; then
             echo "No changes found" >> apk/${{ matrix.userName }}-Release.log
           fi
           
@@ -385,17 +376,14 @@ import com.fongmi.android.tv.bean.Config;\
           git remote set-url --add origin "https://${{ github.actor }}:${{ secrets.GIT_TOKEN }}@github.com/${{ github.repository }}"
           git pull --rebase
           
-          # 获取当前时间，北京时间
-          current_time=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
+          # 鑾峰彇褰撳墠鏃堕棿锛屽寳浜椂闂?          current_time=$(TZ='Asia/Shanghai' date '+%Y-%m-%d %H:%M:%S')
           
-          # 更新对应仓库的 commit hash 和构建时间
-          sed -i "/\[${{ matrix.userName }}\/${{ matrix.repoName }}\].*${{ matrix.branchName }}/{
+          # 鏇存柊瀵瑰簲浠撳簱鐨?commit hash 鍜屾瀯寤烘椂闂?          sed -i "/\[${{ matrix.userName }}\/${{ matrix.repoName }}\].*${{ matrix.branchName }}/{
             s/[a-z0-9]\{40\}/${{ env.commit }}/
             s/| [^|]* |$/| $current_time |/
           }" README.md
           
-          # 更新底部的更新时间
-          sed -i "s/update at .*/update at ${current_time}/" README.md
+          # 鏇存柊搴曢儴鐨勬洿鏂版椂闂?          sed -i "s/update at .*/update at ${current_time}/" README.md
           
           git add --all
           git commit -m "Update ${{ matrix.userName }}/${{ matrix.repoName }} to ${{ env.commit }} at ${current_time}"
