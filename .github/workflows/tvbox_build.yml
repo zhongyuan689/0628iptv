@@ -211,8 +211,10 @@ jobs:
           fi
           
           # Setting.java 修改
-          sed -i 's|getBoolean("danmaku_load")|getBoolean("danmaku_load", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
-          sed -i 's|getBoolean("danmaku_show")|getBoolean("danmaku_show", true)|' app/src/main/java/com/fongmi/android/tv/Setting.java
+          if [ -f "app/src/main/java/com/fongmi/android/tv/setting/Setting.java" ]; then
+            sed -i 's|getBoolean("danmaku_load")|getBoolean("danmaku_load", true)|' app/src/main/java/com/fongmi/android/tv/setting/Setting.java
+            sed -i 's|getBoolean("danmaku_show")|getBoolean("danmaku_show", true)|' app/src/main/java/com/fongmi/android/tv/setting/Setting.java
+          fi
           
           # 注释更新代码
           for f in app/src/leanback/java/com/fongmi/android/tv/Updater.java app/src/mobile/java/com/fongmi/android/tv/Updater.java; do
