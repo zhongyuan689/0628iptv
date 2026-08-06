@@ -196,6 +196,12 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
+          # 调试：检查 local.properties 内容
+          echo "=== local.properties 内容 ==="
+          cat local.properties
+          echo ""
+          echo "=== 检查 JKS 文件 ==="
+          ls -la app/TVBoxOSC.jks || echo "JKS 文件不存在"
           chmod +x gradlew
           echo "org.gradle.daemon=true" >> gradle.properties
           echo "org.gradle.parallel=true" >> gradle.properties
