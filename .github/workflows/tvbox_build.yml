@@ -111,17 +111,6 @@ jobs:
         run: |
           tar -cJf source-${{ env.commitS }}.tar.xz --exclude=.git --exclude=.github *
           
-      - name: Release Apk Sign
-        if: ${{ env.commit }}
-        working-directory: TVBoxOSC
-        run: |
-          #签名配置：写入 local.properties，使用绝对路径
-          cp -f ${{ github.workspace }}/.github/workflows/TVBoxOSC.jks app/TVBoxOSC.jks
-          echo "storeFile=${{ github.workspace }}/TVBoxOSC/app/TVBoxOSC.jks" >> ./local.properties
-          echo "keyAlias=TVBoxOSC" >> ./local.properties
-          echo "storePassword=TVBoxOSC" >> ./local.properties
-          echo "keyPassword=TVBoxOSC" >> ./local.properties
-          
       - name: Only for FongMi
         if: ${{ matrix.userName == 'FongMi' && env.commit }}
         working-directory: TVBoxOSC
@@ -186,22 +175,24 @@ jobs:
         if: ${{ env.commit }}
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Create local.properties
+      - name: Create local.properties and Sign
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          # 写入 Android SDK 路径和签名配置
+          echo "sdk.dir=$ANDROID_HOME" >> local.properties
+          echo "storeFile=${{ github.workspace }}/TVBoxOSC/app/TVBoxOSC.jks" >> local.properties
+          echo "keyAlias=TVBoxOSC" >> local.properties
+          echo "storePassword=TVBoxOSC" >> local.properties
+          echo "keyPassword=TVBoxOSC" >> local.properties
+          cp -f ${{ github.workspace }}/.github/workflows/TVBoxOSC.jks app/TVBoxOSC.jks
+          echo "=== local.properties 内容 ==="
+          cat local.properties
 
       - name: Build With Gradle
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          # 调试：检查 local.properties 内容
-          echo "=== local.properties 内容 ==="
-          cat local.properties
-          echo ""
-          echo "=== 检查 JKS 文件 ==="
-          ls -la app/TVBoxOSC.jks || echo "JKS 文件不存在"
           chmod +x gradlew
           echo "org.gradle.daemon=true" >> gradle.properties
           echo "org.gradle.parallel=true" >> gradle.properties
