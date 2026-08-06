@@ -123,7 +123,6 @@ jobs:
           echo "keyPassword=TVBoxOSC" >> ./local.properties
           
       - name: Only for FongMi
-      - name: Only for FongMi
         if: ${{ matrix.userName == 'FongMi' && env.commit }}
         working-directory: TVBoxOSC
         run: |
