@@ -115,9 +115,9 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          #签名配置：写入 local.properties
+          #签名配置：写入 local.properties，使用绝对路径
           cp -f ${{ github.workspace }}/.github/workflows/TVBoxOSC.jks app/TVBoxOSC.jks
-          echo "storeFile=./app/TVBoxOSC.jks" >> ./local.properties
+          echo "storeFile=${{ github.workspace }}/TVBoxOSC/app/TVBoxOSC.jks" >> ./local.properties
           echo "keyAlias=TVBoxOSC" >> ./local.properties
           echo "storePassword=TVBoxOSC" >> ./local.properties
           echo "keyPassword=TVBoxOSC" >> ./local.properties
