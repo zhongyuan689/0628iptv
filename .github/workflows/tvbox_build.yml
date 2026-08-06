@@ -160,17 +160,12 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          #签名配置：修改 build.gradle 中的属性读取方式
-          sed -i 's/storeFile file(localProps\[.storeFile.\])/storeFile file(project.property("RELEASE_STORE_FILE") ?: "")/' app/build.gradle
-          sed -i 's/keyAlias localProps\[.keyAlias.\]/keyAlias project.property("RELEASE_KEY_ALIAS")/' app/build.gradle
-          sed -i 's/keyPassword localProps\[.storePassword.\]/keyPassword project.property("RELEASE_KEY_PASSWORD")/' app/build.gradle
-          sed -i 's/storePassword localProps\[.storePassword.\]/storePassword project.property("RELEASE_STORE_PASSWORD")/' app/build.gradle
-          
+          #签名配置：写入 local.properties
           cp -f ${{ github.workspace }}/.github/workflows/TVBoxOSC.jks app/TVBoxOSC.jks
-          echo "RELEASE_STORE_FILE=./TVBoxOSC.jks" >> ./gradle.properties
-          echo "RELEASE_KEY_ALIAS=TVBoxOSC" >> ./gradle.properties
-          echo "RELEASE_STORE_PASSWORD=TVBoxOSC" >> ./gradle.properties
-          echo "RELEASE_KEY_PASSWORD=TVBoxOSC" >> ./gradle.properties
+          echo "storeFile=./app/TVBoxOSC.jks" >> ./local.properties
+          echo "keyAlias=TVBoxOSC" >> ./local.properties
+          echo "storePassword=TVBoxOSC" >> ./local.properties
+          echo "keyPassword=TVBoxOSC" >> ./local.properties
           
       - name: Only for FongMi
         if: ${{ matrix.userName == 'FongMi' && env.commit }}
