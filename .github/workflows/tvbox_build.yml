@@ -158,22 +158,22 @@ jobs:
             yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" >/dev/null 2>&1 || true
           fi
           ./gradlew \
-            :lib-common:publishReleasePublicationToRepoRepository \
-            :lib-container:publishReleasePublicationToRepoRepository \
-            :lib-database:publishReleasePublicationToRepoRepository \
-            :lib-datasource:publishReleasePublicationToRepoRepository \
-            :lib-datasource-okhttp:publishReleasePublicationToRepoRepository \
-            :lib-decoder:publishReleasePublicationToRepoRepository \
-            :lib-effect:publishReleasePublicationToRepoRepository \
-            :lib-exoplayer:publishReleasePublicationToRepoRepository \
-            :lib-exoplayer-dash:publishReleasePublicationToRepoRepository \
-            :lib-exoplayer-hls:publishReleasePublicationToRepoRepository \
-            :lib-exoplayer-rtsp:publishReleasePublicationToRepoRepository \
-            :lib-exoplayer-smoothstreaming:publishReleasePublicationToRepoRepository \
-            :lib-extractor:publishReleasePublicationToRepoRepository \
-            :lib-session:publishReleasePublicationToRepoRepository \
-            :lib-ui:publishReleasePublicationToRepoRepository \
-            :lib-ui-danmaku:publishReleasePublicationToRepoRepository \
+            :lib-common:publishReleasePublicationToMavenRepository \
+            :lib-container:publishReleasePublicationToMavenRepository \
+            :lib-database:publishReleasePublicationToMavenRepository \
+            :lib-datasource:publishReleasePublicationToMavenRepository \
+            :lib-datasource-okhttp:publishReleasePublicationToMavenRepository \
+            :lib-decoder:publishReleasePublicationToMavenRepository \
+            :lib-effect:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-dash:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-hls:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-rtsp:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-smoothstreaming:publishReleasePublicationToMavenRepository \
+            :lib-extractor:publishReleasePublicationToMavenRepository \
+            :lib-session:publishReleasePublicationToMavenRepository \
+            :lib-ui:publishReleasePublicationToMavenRepository \
+            :lib-ui-danmaku:publishReleasePublicationToMavenRepository \
             -PreleaseVersion=1.10.1-fongmi \
             -PmavenRepo=/tmp/fongmi-media-repo \
             --no-daemon --stacktrace
@@ -190,13 +190,19 @@ jobs:
               sudo apt-get install -y -qq software-properties-common
               sudo add-apt-repository -y ppa:deadsnakes/ppa
               sudo apt-get update -qq
-              sudo apt-get install -y -qq python3.11 python3.11-dev
+              sudo apt-get install -y -qq python3.11 python3.11-dev python3.11-distutils
             fi
             find . -name "build.gradle" -exec sed -i 's|buildPython("[^"]*")|buildPython("/usr/bin/python3.11")|' {} +
             echo "=== 修复后 buildPython 配置 ==="
             grep -r "buildPython" --include="*.gradle" .
           else
             echo "无 buildPython 配置（无需修复）"
+          fi
+          # 替换不稳定的阿里云 maven 镜像为官方仓库（takagen99 等上游配置了 aliyun，502 导致构建失败）
+          if grep -rl "maven.aliyun.com" . >/dev/null 2>&1; then
+            grep -rl "maven.aliyun.com" . | xargs sed -i 's|https://maven.aliyun.com/repository/public|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/google|https://maven.google.com|g; s|https://maven.aliyun.com/repository/central|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/gradle-plugin|https://plugins.gradle.org/m2|g'
+            echo "=== 已替换 aliyun 镜像 ==="
+            grep -rn "aliyun" . || echo "无残留 aliyun 引用"
           fi
 
       - name: Build With Gradle
@@ -288,7 +294,7 @@ jobs:
           delete_tags: true
           delete_tag_pattern: ${{ matrix.userName }}_${{ matrix.repoName }}_${{ matrix.branchName }}.*
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 
       - name: Push to master
