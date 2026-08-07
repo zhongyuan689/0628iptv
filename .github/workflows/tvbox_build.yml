@@ -151,14 +151,21 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          # 修复上游硬编码的 Windows Python 路径（chaquo buildPython）
-          if ! command -v python3.11 >/dev/null 2>&1; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq python3.11
+          # 修复上游硬编码的 Windows Python 路径（chaquo buildPython），仅当存在 buildPython 配置时
+          if grep -rq "buildPython" --include="*.gradle" .; then
+            if ! command -v python3.11 >/dev/null 2>&1; then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq software-properties-common
+              sudo add-apt-repository -y -qq ppa:deadsnakes/ppa
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq python3.11 python3.11-dev
+            fi
+            find . -name "build.gradle" -exec sed -i 's|buildPython("[^"]*")|buildPython("/usr/bin/python3.11")|' {} +
+            echo "=== 修复后 buildPython 配置 ==="
+            grep -r "buildPython" --include="*.gradle" .
+          else
+            echo "无 buildPython 配置（无需修复）"
           fi
-          find . -name "build.gradle" -exec sed -i 's|buildPython("[^"]*")|buildPython("/usr/bin/python3.11")|' {} +
-          echo "=== 修复后 buildPython 配置 ==="
-          grep -r "buildPython" --include="*.gradle" . || echo "无 buildPython 配置（无需修复）"
 
       - name: Build With Gradle
         if: ${{ env.commit }}
