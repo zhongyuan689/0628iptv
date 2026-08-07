@@ -135,7 +135,7 @@ jobs:
         working-directory: TVBoxOSC
         run: |
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "storeFile=./app/TVBoxOSC.jks" >> local.properties
+          echo "storeFile=TVBoxOSC.jks" >> local.properties
           echo "keyAlias=TVBoxOSC" >> local.properties
           echo "storePassword=TVBoxOSC" >> local.properties
           echo "keyPassword=TVBoxOSC" >> local.properties
