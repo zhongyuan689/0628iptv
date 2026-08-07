@@ -154,6 +154,8 @@ jobs:
           # FongMi/TV 源码依赖 media3 fork 定制类（PlayerSeekView/DecodeTrackSelector/DiskPreloadManager/Danmaku*），官方 maven 与 webhtv fork 均不满足
           git clone --depth 1 --branch release-1.10.1-fongmi https://github.com/FongMi/media.git /tmp/fongmi-media
           cd /tmp/fongmi-media
+          # 注释 missing_aar_type_workaround.gradle 的 IllegalStateException（smbj 等传递依赖未在其 jar/aar 列表，publish 阶段会抛异常；注释后未声明依赖直接跳过，纯 JAR 不加 type 声明本就正确）
+          sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
           if ! ls $ANDROID_HOME/platforms/android-36 >/dev/null 2>&1; then
             yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" >/dev/null 2>&1 || true
           fi
@@ -200,10 +202,12 @@ jobs:
           fi
           # 替换不稳定的阿里云 maven 镜像为官方仓库（takagen99 等上游配置了 aliyun，502 导致构建失败）
           if grep -rl "maven.aliyun.com" . >/dev/null 2>&1; then
-            grep -rl "maven.aliyun.com" . | xargs sed -i 's|https://maven.aliyun.com/repository/public|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/google|https://maven.google.com|g; s|https://maven.aliyun.com/repository/central|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/gradle-plugin|https://plugins.gradle.org/m2|g'
+            grep -rl "maven.aliyun.com" . | xargs sed -i 's|https://maven.aliyun.com/repository/public|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/google|https://maven.google.com|g; s|https://maven.aliyun.com/repository/central|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/gradle-plugin|https://plugins.gradle.org/m2|g'; s|https://maven.aliyun.com/repository/releases|https://maven.aliyun.com/repository/public|g
             echo "=== 已替换 aliyun 镜像 ==="
             grep -rn "aliyun" . || echo "无残留 aliyun 引用"
           fi
+          # 降级 pyquery 到 1.4.4（chaquopy pip 索引快照里 cssselect 最高仅 1.2.0，pyquery 2.x 要求 cssselect>=1.5.0 无法满足；1.4.4 约束 cssselect>=0.9 可满足）
+          find . -path "*pyramid/build.gradle" -exec sed -i 's|install "pyquery"|install "pyquery==1.4.4"|g; s|pyquery==2.0.2|pyquery==1.4.4|g' {} +
 
       - name: Build With Gradle
         if: ${{ env.commit }}
