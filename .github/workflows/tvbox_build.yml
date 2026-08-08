@@ -159,14 +159,13 @@ jobs:
           if ! ls $ANDROID_HOME/platforms/android-36 >/dev/null 2>&1; then
             yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" >/dev/null 2>&1 || true
           fi
-          echo "=== 建立符号链接（必须先于构建）==="
-          rm -rf /tmp/fongmi-media-repo/buildout
-          ln -sfn /tmp/fongmi-media/buildout /tmp/fongmi-media-repo/buildout
-          echo "Symlink: /tmp/fongmi-media-repo/buildout -> /tmp/fongmi-media/buildout [OK]"
-          echo "mkdir -p /tmp/fongmi-media-repo/buildout/repo"
-          mkdir -p /tmp/fongmi-media-repo/buildout/repo
+          echo "=== 清理并建立统一路径 /tmp/fongmi-media-repo-buildout ==="
+          rm -rf /tmp/fongmi-media-repo-buildout
+          ln -sfn /tmp/fongmi-media/buildout /tmp/fongmi-media-repo-buildout
+          echo "Symlink: /tmp/fongmi-media-repo-buildout -> /tmp/fongmi-media/buildout [OK]"
+          mkdir -p /tmp/fongmi-media-repo-buildout
           echo "=== Patch gradle.properties + publish.gradle: absolute paths ==="
-          echo "CmltcG9ydCByZSwgb3MKdGFyZ2V0X3B1YiA9ICcvdG1wL2ZvbmdtaS1tZWRpYS1yZXBvLWJ1aWxkb3V0L3JlcG8nCnRhcmdldF9iZGlyID0gJy90bXAvZm9uZ21pLW1lZGlhLXJlcG8tYnVpbGRvdXQnCmZvciByb290LCBkaXJzLCBmaWxlcyBpbiBvcy53YWxrKCcvdG1wL2ZvbmdtaS1tZWRpYScpOgogICAgZm9yIGZuYW1lIGluIGZpbGVzOgogICAgICAgIGZwYXRoID0gb3MucGF0aC5qb2luKHJvb3QsIGZuYW1lKQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgdGV4dCA9IGYucmVhZCgpCiAgICAgICAgICAgIGNoYW5nZWQgPSBGYWxzZQogICAgICAgICAgICBpZiBmbmFtZSA9PSAncHVibGlzaC5ncmFkbGUnOgogICAgICAgICAgICAgICAgcGF0Y2hlZCA9IHJlLnN1YigKICAgICAgICAgICAgICAgICAgICByJ3VybFxzKj1ccypmaW5kUHJvcGVydHlcKFteKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICIlcyInICUgdGFyZ2V0X3B1YiwKICAgICAgICAgICAgICAgICAgICB0ZXh0CiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICAgICAgICAgIGYud3JpdGUocGF0Y2hlZCkKICAgICAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBwdWJsaXNoLmdyYWRsZTogJXMnICUgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIoCiAgICAgICAgICAgICAgICAgICAgcideYnVpbGREaXI9YnVpbGRvdXQkJywKICAgICAgICAgICAgICAgICAgICAnYnVpbGREaXI9JXMnICUgdGFyZ2V0X2JkaXIsCiAgICAgICAgICAgICAgICAgICAgdGV4dCwgZmxhZ3M9cmUuTVVMVElMSU5FCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICAgICAgICAgIGYud3JpdGUocGF0Y2hlZCkKICAgICAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBncmFkbGUucHJvcGVydGllczogJXMnICUgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KCdFcnJvciAlczogJXMnICUgKGZwYXRoLCBlKSkK" | base64 -d > /tmp/patch_media3.py
+          echo "CmltcG9ydCByZSwgb3MKIyBCdWlsZCBvdXRwdXQgYW5kIG1hdmVuIHJlcG8gYXQgdGhlIFNBTUUgYWJzb2x1dGUgcGF0aApyZXBvX2RpciA9ICcvdG1wL2ZvbmdtaS1tZWRpYS1yZXBvLWJ1aWxkb3V0Jwpmb3Igcm9vdCwgZGlycywgZmlsZXMgaW4gb3Mud2FsaygnL3RtcC9mb25nbWktbWVkaWEnKToKICAgIGZvciBmbmFtZSBpbiBmaWxlczoKICAgICAgICBmcGF0aCA9IG9zLnBhdGguam9pbihyb290LCBmbmFtZSkKICAgICAgICB0cnk6CiAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgIHRleHQgPSBmLnJlYWQoKQogICAgICAgICAgICBjaGFuZ2VkID0gRmFsc2UKICAgICAgICAgICAgaWYgZm5hbWUgPT0gJ3B1Ymxpc2guZ3JhZGxlJzoKICAgICAgICAgICAgICAgICMgUmVwbGFjZSB0aGUgRU5USVJFIGZpbmRQcm9wZXJ0eSBleHByZXNzaW9uIHdpdGggb3VyIGFic29sdXRlIHJlcG8gZGlyCiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHIndXJsXHMqPVxzKmZpbmRQcm9wZXJ0eVwoW15cKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICJmaWxlOi8vJXMiJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQKICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlmIHBhdGNoZWQgIT0gdGV4dDoKICAgICAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICAgICAgZi53cml0ZShwYXRjaGVkKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkIHB1Ymxpc2guZ3JhZGxlOicsIGZwYXRoKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdncmFkbGUucHJvcGVydGllcyc6CiAgICAgICAgICAgICAgICAjIE92ZXJyaWRlIGJ1aWxkRGlyIHRvIHRoZSBhYnNvbHV0ZSBwYXRoCiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHInXmJ1aWxkRGlyPS4qJCcsCiAgICAgICAgICAgICAgICAgICAgJ2J1aWxkRGlyPSVzJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQsIGZsYWdzPXJlLk1VTFRJTElORQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgZ3JhZGxlLnByb3BlcnRpZXM6JywgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KCdFcnJvcicsIGZwYXRoLCAnOicsIGUpCg==" | base64 -d > /tmp/patch_media3.py
           python3 /tmp/patch_media3.py
           echo "=== 构建并发布 media3 fork (所有模块) ==="
           ./gradlew \
@@ -190,12 +189,12 @@ jobs:
             -PmavenRepo=/tmp/fongmi-media-repo-buildout \
             --no-daemon --stacktrace
           echo "=== 验证 AAR 文件存在 ==="
-          count=$(find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f 2>/dev/null | wc -l)
-          echo "Found $count .aar files in /tmp/fongmi-media-repo/buildout"
-          find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f | head -5
+          count=$(find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f 2>/dev/null | wc -l)
+          echo "Found $count .aar files in /tmp/fongmi-media-repo-buildout"
+          find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f | head -5
           if [ "$count" -eq 0 ]; then
-            echo "ERROR: No AAR files! Checking alternate location..."
-            find /tmp/fongmi-media -name '*.aar' -type f | head -10
+            echo "ERROR: No AAR files! Checking source..."
+            find /tmp/fongmi-media/buildout -name '*.aar' -type f | head -10
             exit 1
           fi
           echo "media3 fork AAR 检查通过"
