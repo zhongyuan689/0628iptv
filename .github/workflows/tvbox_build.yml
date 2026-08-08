@@ -163,9 +163,11 @@ jobs:
           rm -rf /tmp/fongmi-media-repo/buildout
           ln -sfn /tmp/fongmi-media/buildout /tmp/fongmi-media-repo/buildout
           echo "Symlink: /tmp/fongmi-media-repo/buildout -> /tmp/fongmi-media/buildout [OK]"
-          echo "=== Patch publish.gradle 强制使用绝对路径 ==="
+          echo "mkdir -p /tmp/fongmi-media-repo/buildout/repo"
+          mkdir -p /tmp/fongmi-media-repo/buildout/repo
+          echo "=== Patch publish.gradle 强制使用统一绝对路径 ==="
           sed -i "s|url = findProperty('mavenRepo') ?: "\${buildDir}/repo"|url = '/tmp/fongmi-media-repo/buildout/repo'|" publish.gradle
-          echo "publish.gradle patched to use absolute path"
+          echo "publish.gradle patched"
           echo "=== 构建并发布 media3 fork (所有模块) ==="
           ./gradlew \
             :lib-common:publishReleasePublicationToMavenRepository \
