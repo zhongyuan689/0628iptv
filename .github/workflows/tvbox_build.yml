@@ -179,7 +179,7 @@ jobs:
             -PreleaseVersion=1.10.1-fongmi \
             -PmavenRepo=/tmp/fongmi-media-repo/buildout \
             --no-daemon --stacktrace
-          ls /tmp/fongmi-media-repo/androidx/media3/ && echo "media3 fork 构建完成"
+          ls /tmp/fongmi-media-repo/buildout/androidx/media3/ && echo "media3 fork 构建完成"
 
       - name: Fix Chaquo buildPython
         if: ${{ env.commit }}
@@ -206,8 +206,8 @@ jobs:
             echo "=== 已替换 aliyun 镜像 ==="
             grep -rn "aliyun" . || echo "无残留 aliyun 引用"
           fi
-          # 降级 pyquery 到 1.4.4（chaquopy pip 索引快照里 cssselect 最高仅 1.2.0，pyquery 2.x 要求 cssselect>=1.5.0 无法满足；1.4.4 约束 cssselect>=0.9 可满足）
-          find . -path "*pyramid/build.gradle" -exec sed -i 's|install "pyquery"|install "pyquery==1.4.4"|g; s|pyquery==2.0.2|pyquery==1.4.4|g' {} +
+          # 降级 pyquery 到 1.4.3（chaquopy pip 索引快照里 cssselect 最高仅 1.2.0，pyquery 2.x 要求 cssselect>=1.5.0 无法满足；1.4.3 是可用的最新兼容版本）
+          find . -path "*pyramid/build.gradle" -exec sed -i 's|install "pyquery"|install "pyquery==1.4.3"|g; s|pyquery==2.0.2|pyquery==1.4.3|g; s|pyquery==1.4.4|pyquery==1.4.3|g' {} +
 
       - name: Build With Gradle
         if: ${{ env.commit }}
