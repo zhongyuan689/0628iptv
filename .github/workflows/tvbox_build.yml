@@ -159,6 +159,11 @@ jobs:
           if ! ls $ANDROID_HOME/platforms/android-36 >/dev/null 2>&1; then
             yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" >/dev/null 2>&1 || true
           fi
+          echo "=== 建立符号链接（必须先于构建）==="
+          rm -rf /tmp/fongmi-media-repo/buildout
+          ln -sfn /tmp/fongmi-media/buildout /tmp/fongmi-media-repo/buildout
+          echo "Symlink: /tmp/fongmi-media-repo/buildout -> /tmp/fongmi-media/buildout [OK]"
+          echo "=== 构建并发布 media3 fork (所有模块) ==="
           ./gradlew \
             :lib-common:publishReleasePublicationToMavenRepository \
             :lib-container:publishReleasePublicationToMavenRepository \
@@ -179,11 +184,15 @@ jobs:
             -PreleaseVersion=1.10.1-fongmi \
             -PmavenRepo=/tmp/fongmi-media-repo/buildout \
             --no-daemon --stacktrace
-          echo "=== 验证 AAR 文件是否存在 ==="
+          echo "=== 验证 AAR 文件存在 ==="
           count=$(find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f 2>/dev/null | wc -l)
-          echo "Found $count .aar files"
+          echo "Found $count .aar files in /tmp/fongmi-media-repo/buildout"
           find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f | head -5
-          if [ "$count" -eq 0 ]; then echo "ERROR: No AAR files found!"; exit 1; fi
+          if [ "$count" -eq 0 ]; then
+            echo "ERROR: No AAR files! Checking alternate location..."
+            find /tmp/fongmi-media -name '*.aar' -type f | head -10
+            exit 1
+          fi
           echo "media3 fork AAR 检查通过"
 
       - name: Fix Chaquo buildPython
