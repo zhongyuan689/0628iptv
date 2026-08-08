@@ -165,9 +165,9 @@ jobs:
           echo "Symlink: /tmp/fongmi-media-repo/buildout -> /tmp/fongmi-media/buildout [OK]"
           echo "mkdir -p /tmp/fongmi-media-repo/buildout/repo"
           mkdir -p /tmp/fongmi-media-repo/buildout/repo
-          echo "=== Patch publish.gradle 强制使用统一绝对路径 ==="
-          sed -i "s|url = findProperty('mavenRepo') ?: "\${buildDir}/repo"|url = '/tmp/fongmi-media-repo/buildout/repo'|" publish.gradle
-          echo "publish.gradle patched"
+          echo "=== Patch gradle.properties + publish.gradle: absolute paths ==="
+          echo "aW1wb3J0IHJlLCBvcwp0YXJnZXRfcHViID0gJy90bXAvZm9uZ21pLW1lZGlhLXJlcG8vYnVpbGRvdXQvcmVwbycKdGFyZ2V0X2JkaXIgPSAnL3RtcC9mb25nbWktbWVkaWEtcmVwby9idWlsZG91dCcKZm9yIHJvb3QsIGRpcnMsIGZpbGVzIGluIG9zLndhbGsoJy4nKToKICAgIGZvciBmbmFtZSBpbiBmaWxlczoKICAgICAgICBmcGF0aCA9IG9zLnBhdGguam9pbihyb290LCBmbmFtZSkKICAgICAgICB0cnk6CiAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgIHRleHQgPSBmLnJlYWQoKQogICAgICAgICAgICBpZiBmbmFtZSA9PSAncHVibGlzaC5ncmFkbGUnOgogICAgICAgICAgICAgICAgcGF0Y2hlZCA9IHJlLnN1YigKICAgICAgICAgICAgICAgICAgICByJ3VybFxzKj1ccypmaW5kUHJvcGVydHlcKFteKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICIlcyInICUgdGFyZ2V0X3B1YiwKICAgICAgICAgICAgICAgICAgICB0ZXh0CiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICAgICAgICAgIGYud3JpdGUocGF0Y2hlZCkKICAgICAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBwdWJsaXNoLmdyYWRsZTogJXMnICUgZnBhdGgpCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdncmFkbGUucHJvcGVydGllcyc6CiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHInXmJ1aWxkRGlyPWJ1aWxkb3V0JCcsCiAgICAgICAgICAgICAgICAgICAgJ2J1aWxkRGlyPSVzJyAlIHRhcmdldF9iZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQsIGZsYWdzPXJlLk1VTFRJTElORQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgZ3JhZGxlLnByb3BlcnRpZXM6ICVzJyAlIGZwYXRoKQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcHJpbnQoJ0Vycm9yICVzOiAlcycgJSAoZnBhdGgsIGUpKQo=" | base64 -d > /tmp/patch_media3.py
+          python3 /tmp/patch_media3.py
           echo "=== 构建并发布 media3 fork (所有模块) ==="
           ./gradlew \
             :lib-common:publishReleasePublicationToMavenRepository \
