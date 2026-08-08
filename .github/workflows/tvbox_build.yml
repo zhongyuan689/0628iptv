@@ -150,24 +150,44 @@ jobs:
       - name: Build FongMi media3 fork
         if: ${{ env.upStream == 'https://github.com/FongMi/TV' }}
         run: |
-          # 构建 FongMi 自维护的 media3 fork（release-1.10.1-fongmi），发布 16 个模块到本地 maven repo
-          # FongMi/TV 源码依赖 media3 fork 定制类（PlayerSeekView/DecodeTrackSelector/DiskPreloadManager/Danmaku*），官方 maven 与 webhtv fork 均不满足
-          git clone --depth 1 --branch release-1.10.1-fongmi https://github.com/FongMi/media.git /tmp/fongmi-media
-          cd /tmp/fongmi-media
-          # 注释 missing_aar_type_workaround.gradle 的 IllegalStateException（smbj 等传递依赖未在其 jar/aar 列表，publish 阶段会抛异常；注释后未声明依赖直接跳过，纯 JAR 不加 type 声明本就正确）
-          sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
-          if ! ls $ANDROID_HOME/platforms/android-36 >/dev/null 2>&1; then
-            yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-36" >/dev/null 2>&1 || true
+          set -x
+          echo "=== [1/6] Clone media3 fork ==="
+          if [ -d /tmp/fongmi-media/.git ]; then
+            echo "Already cloned, updating..."
+            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.10.1-fongmi && git checkout release-1.10.1-fongmi
+          else
+            echo "Cloning (depth=1, ~460MB)..."
+            git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
           fi
-          echo "=== 清理并建立统一路径 /tmp/fongmi-media-repo-buildout ==="
+          if [ ! -f /tmp/fongmi-media/gradlew ]; then
+            echo "FATAL: clone failed, no gradlew!"
+            ls -la /tmp/fongmi-media/ 2>&1 | head -20
+            exit 1
+          fi
+          echo "[1/6] Clone OK"
+          echo "=== [2/6] Install android-36 SDK ==="
+          cd /tmp/fongmi-media
+          if ! ls "$ANDROID_HOME/platforms/android-36" >/dev/null 2>&1; then
+            echo "Installing android-36..."
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK install note: may need retry"
+          else
+            echo "android-36 already present"
+          fi
+          echo "=== [3/6] Setup repo directory ==="
           rm -rf /tmp/fongmi-media-repo-buildout
-          ln -sfn /tmp/fongmi-media/buildout /tmp/fongmi-media-repo-buildout
-          echo "Symlink: /tmp/fongmi-media-repo-buildout -> /tmp/fongmi-media/buildout [OK]"
           mkdir -p /tmp/fongmi-media-repo-buildout
-          echo "=== Patch gradle.properties + publish.gradle: absolute paths ==="
-          echo "CmltcG9ydCByZSwgb3MKIyBCdWlsZCBvdXRwdXQgYW5kIG1hdmVuIHJlcG8gYXQgdGhlIFNBTUUgYWJzb2x1dGUgcGF0aApyZXBvX2RpciA9ICcvdG1wL2ZvbmdtaS1tZWRpYS1yZXBvLWJ1aWxkb3V0Jwpmb3Igcm9vdCwgZGlycywgZmlsZXMgaW4gb3Mud2FsaygnL3RtcC9mb25nbWktbWVkaWEnKToKICAgIGZvciBmbmFtZSBpbiBmaWxlczoKICAgICAgICBmcGF0aCA9IG9zLnBhdGguam9pbihyb290LCBmbmFtZSkKICAgICAgICB0cnk6CiAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgIHRleHQgPSBmLnJlYWQoKQogICAgICAgICAgICBjaGFuZ2VkID0gRmFsc2UKICAgICAgICAgICAgaWYgZm5hbWUgPT0gJ3B1Ymxpc2guZ3JhZGxlJzoKICAgICAgICAgICAgICAgICMgUmVwbGFjZSB0aGUgRU5USVJFIGZpbmRQcm9wZXJ0eSBleHByZXNzaW9uIHdpdGggb3VyIGFic29sdXRlIHJlcG8gZGlyCiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHIndXJsXHMqPVxzKmZpbmRQcm9wZXJ0eVwoW15cKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICJmaWxlOi8vJXMiJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQKICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlmIHBhdGNoZWQgIT0gdGV4dDoKICAgICAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICAgICAgZi53cml0ZShwYXRjaGVkKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkIHB1Ymxpc2guZ3JhZGxlOicsIGZwYXRoKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdncmFkbGUucHJvcGVydGllcyc6CiAgICAgICAgICAgICAgICAjIE92ZXJyaWRlIGJ1aWxkRGlyIHRvIHRoZSBhYnNvbHV0ZSBwYXRoCiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHInXmJ1aWxkRGlyPS4qJCcsCiAgICAgICAgICAgICAgICAgICAgJ2J1aWxkRGlyPSVzJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQsIGZsYWdzPXJlLk1VTFRJTElORQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgZ3JhZGxlLnByb3BlcnRpZXM6JywgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KCdFcnJvcicsIGZwYXRoLCAnOicsIGUpCg==" | base64 -d > /tmp/patch_media3.py
+          echo "=== [4/6] Patch gradle files ==="
+          # Patch missing_aar_type_workaround.gradle
+          if [ -f missing_aar_type_workaround.gradle ]; then
+            sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
+            echo "Patched missing_aar workaround"
+          else
+            echo "WARNING: missing_aar_type_workaround.gradle not found"
+          fi
+          # Apply python patch for publish.gradle + gradle.properties
+          echo "CmltcG9ydCByZSwgb3MKcmVwb19kaXIgPSAnL3RtcC9mb25nbWktbWVkaWEtcmVwby1idWlsZG91dCcKZm9yIHJvb3QsIGRpcnMsIGZpbGVzIGluIG9zLndhbGsoJy90bXAvZm9uZ21pLW1lZGlhJyk6CiAgICBmb3IgZm5hbWUgaW4gZmlsZXM6CiAgICAgICAgZnBhdGggPSBvcy5wYXRoLmpvaW4ocm9vdCwgZm5hbWUpCiAgICAgICAgdHJ5OgogICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICB0ZXh0ID0gZi5yZWFkKCkKICAgICAgICAgICAgY2hhbmdlZCA9IEZhbHNlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHIndXJsXHMqPVxzKmZpbmRQcm9wZXJ0eVwoW15cKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICJmaWxlOi8vJXMiJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQKICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlmIHBhdGNoZWQgIT0gdGV4dDoKICAgICAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICAgICAgZi53cml0ZShwYXRjaGVkKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkIHB1Ymxpc2guZ3JhZGxlOicsIGZwYXRoKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdncmFkbGUucHJvcGVydGllcyc6CiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHInXmJ1aWxkRGlyPS4qJCcsCiAgICAgICAgICAgICAgICAgICAgJ2J1aWxkRGlyPSVzJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQsIGZsYWdzPXJlLk1VTFRJTElORQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgZ3JhZGxlLnByb3BlcnRpZXM6JywgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KCdFcnJvcicsIGZwYXRoLCAnOicsIGUpCg==" | base64 -d > /tmp/patch_media3.py
           python3 /tmp/patch_media3.py
-          echo "=== 构建并发布 media3 fork (所有模块) ==="
+          echo "=== [5/6] Build & publish ==="
           ./gradlew \
             :lib-common:publishReleasePublicationToMavenRepository \
             :lib-container:publishReleasePublicationToMavenRepository \
@@ -188,17 +208,21 @@ jobs:
             -PreleaseVersion=1.10.1-fongmi \
             -PmavenRepo=/tmp/fongmi-media-repo-buildout \
             --no-daemon --stacktrace
-          echo "=== 验证 AAR 文件存在 ==="
-          count=$(find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f 2>/dev/null | wc -l)
+          GRADLE_EXIT=$?
+          echo "Gradle exit code: $GRADLE_EXIT"
+          echo "=== [6/6] Verify AAR files ==="
+          find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f > /tmp/aar_list.txt
+          count=$(wc -l < /tmp/aar_list.txt)
           echo "Found $count .aar files in /tmp/fongmi-media-repo-buildout"
-          find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f | head -5
+          cat /tmp/aar_list.txt | head -10
           if [ "$count" -eq 0 ]; then
-            echo "ERROR: No AAR files! Checking source..."
+            echo "ERROR: No AAR files!"
+            echo "Checking /tmp/fongmi-media/buildout:"
             find /tmp/fongmi-media/buildout -name '*.aar' -type f | head -10
             exit 1
           fi
-          echo "media3 fork AAR 检查通过"
-
+          echo "media3 fork AAR check PASSED ($count files)"
+          exit $GRADLE_EXIT
       - name: Fix Chaquo buildPython
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
