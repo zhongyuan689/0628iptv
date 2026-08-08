@@ -160,7 +160,7 @@ jobs:
             git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
           fi
           if [ ! -f /tmp/fongmi-media/gradlew ]; then
-            echo "FATAL: clone failed, no gradlew!"
+            echo "FATAL: clone failed!"
             ls -la /tmp/fongmi-media/ 2>&1 | head -20
             exit 1
           fi
@@ -169,7 +169,7 @@ jobs:
           cd /tmp/fongmi-media
           if ! ls "$ANDROID_HOME/platforms/android-36" >/dev/null 2>&1; then
             echo "Installing android-36..."
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK install note: may need retry"
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK note: may already be installed"
           else
             echo "android-36 already present"
           fi
@@ -177,15 +177,15 @@ jobs:
           rm -rf /tmp/fongmi-media-repo-buildout
           mkdir -p /tmp/fongmi-media-repo-buildout
           echo "=== [4/6] Patch gradle files ==="
-          # Patch missing_aar_type_workaround.gradle
+          # Patch missing_aar workaround
           if [ -f missing_aar_type_workaround.gradle ]; then
             sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
             echo "Patched missing_aar workaround"
           else
             echo "WARNING: missing_aar_type_workaround.gradle not found"
           fi
-          # Apply python patch for publish.gradle + gradle.properties
-          echo "CmltcG9ydCByZSwgb3MKcmVwb19kaXIgPSAnL3RtcC9mb25nbWktbWVkaWEtcmVwby1idWlsZG91dCcKZm9yIHJvb3QsIGRpcnMsIGZpbGVzIGluIG9zLndhbGsoJy90bXAvZm9uZ21pLW1lZGlhJyk6CiAgICBmb3IgZm5hbWUgaW4gZmlsZXM6CiAgICAgICAgZnBhdGggPSBvcy5wYXRoLmpvaW4ocm9vdCwgZm5hbWUpCiAgICAgICAgdHJ5OgogICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICB0ZXh0ID0gZi5yZWFkKCkKICAgICAgICAgICAgY2hhbmdlZCA9IEZhbHNlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHIndXJsXHMqPVxzKmZpbmRQcm9wZXJ0eVwoW15cKV0rXClccyo6XHMqIlteIl0qIicsCiAgICAgICAgICAgICAgICAgICAgJ3VybCA9ICJmaWxlOi8vJXMiJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQKICAgICAgICAgICAgICAgICkKICAgICAgICAgICAgICAgIGlmIHBhdGNoZWQgIT0gdGV4dDoKICAgICAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICAgICAgZi53cml0ZShwYXRjaGVkKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkIHB1Ymxpc2guZ3JhZGxlOicsIGZwYXRoKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdncmFkbGUucHJvcGVydGllcyc6CiAgICAgICAgICAgICAgICBwYXRjaGVkID0gcmUuc3ViKAogICAgICAgICAgICAgICAgICAgIHInXmJ1aWxkRGlyPS4qJCcsCiAgICAgICAgICAgICAgICAgICAgJ2J1aWxkRGlyPSVzJyAlIHJlcG9fZGlyLAogICAgICAgICAgICAgICAgICAgIHRleHQsIGZsYWdzPXJlLk1VTFRJTElORQogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgZ3JhZGxlLnByb3BlcnRpZXM6JywgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICAgICAgICAgIHByaW50KCdFcnJvcicsIGZwYXRoLCAnOicsIGUpCg==" | base64 -d > /tmp/patch_media3.py
+          # Apply python patch: publish.gradle url -> hardcoded absolute path
+          echo "CmltcG9ydCByZSwgb3MKZm9yIHJvb3QsIGRpcnMsIGZpbGVzIGluIG9zLndhbGsoJy90bXAvZm9uZ21pLW1lZGlhJyk6CiAgICBmb3IgZm5hbWUgaW4gZmlsZXM6CiAgICAgICAgZnBhdGggPSBvcy5wYXRoLmpvaW4ocm9vdCwgZm5hbWUpCiAgICAgICAgdHJ5OgogICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICB0ZXh0ID0gZi5yZWFkKCkKICAgICAgICAgICAgY2hhbmdlZCA9IEZhbHNlCiAgICAgICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgICAgICAjIFJlcGxhY2UgdGhlIEVOVElSRSB1cmwgYXNzaWdubWVudCB3aXRoIGhhcmRjb2RlZCBhYnNvbHV0ZSBwYXRoCiAgICAgICAgICAgICAgICAjIFBhdHRlcm46IHVybCA9IGZpbmRQcm9wZXJ0eSguLi4pIDogInNvbWUvcGF0aCIKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIoCiAgICAgICAgICAgICAgICAgICAgcid1cmxccyo9XHMqZmluZFByb3BlcnR5XChbXildK1wpXHMqOlxzKiJbXiJdKiInLAogICAgICAgICAgICAgICAgICAgIGYndXJsID0gImZpbGU6Ly8vdG1wL2ZvbmdtaS1tZWRpYS1yZXBvLWJ1aWxkb3V0IicsCiAgICAgICAgICAgICAgICAgICAgdGV4dAogICAgICAgICAgICAgICAgKQogICAgICAgICAgICAgICAgaWYgcGF0Y2hlZCAhPSB0ZXh0OgogICAgICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQ6JywgZnBhdGgpCiAgICAgICAgICAgICAgICAgICAgY2hhbmdlZCA9IFRydWUKICAgICAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIoCiAgICAgICAgICAgICAgICAgICAgcideYnVpbGREaXI9LiokJywKICAgICAgICAgICAgICAgICAgICAnYnVpbGREaXI9JXMnICUgcmVwb19kaXIsCiAgICAgICAgICAgICAgICAgICAgdGV4dCwgZmxhZ3M9cmUuTVVMVElMSU5FCiAgICAgICAgICAgICAgICApCiAgICAgICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICAgICAgICAgICAgICAgICAgICAgIGYud3JpdGUocGF0Y2hlZCkKICAgICAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZDonLCBmcGF0aCkKICAgICAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgIGV4Y2VwdCBFeGNlcHRpb24gYXMgZToKICAgICAgICAgICAgcHJpbnQoJ0Vycm9yJywgZnBhdGgsICc6JywgZSkK" | base64 -d > /tmp/patch_media3.py
           python3 /tmp/patch_media3.py
           echo "=== [5/6] Build & publish ==="
           ./gradlew \
@@ -205,20 +205,18 @@ jobs:
             :lib-session:publishReleasePublicationToMavenRepository \
             :lib-ui:publishReleasePublicationToMavenRepository \
             :lib-ui-danmaku:publishReleasePublicationToMavenRepository \
-            -PreleaseVersion=1.10.1-fongmi \
-            -PmavenRepo=/tmp/fongmi-media-repo-buildout \
-            --no-daemon --stacktrace
-          GRADLE_EXIT=$?
+            --no-daemon --stacktrace 2>&1 | tee /tmp/gradle_build.log
+          GRADLE_EXIT=${PIPESTATUS[0]}
           echo "Gradle exit code: $GRADLE_EXIT"
           echo "=== [6/6] Verify AAR files ==="
           find /tmp/fongmi-media-repo-buildout -name '*.aar' -type f > /tmp/aar_list.txt
           count=$(wc -l < /tmp/aar_list.txt)
           echo "Found $count .aar files in /tmp/fongmi-media-repo-buildout"
-          cat /tmp/aar_list.txt | head -10
+          cat /tmp/aar_list.txt
           if [ "$count" -eq 0 ]; then
             echo "ERROR: No AAR files!"
-            echo "Checking /tmp/fongmi-media/buildout:"
-            find /tmp/fongmi-media/buildout -name '*.aar' -type f | head -10
+            echo "Gradle log tail:"
+            tail -30 /tmp/gradle_build.log
             exit 1
           fi
           echo "media3 fork AAR check PASSED ($count files)"
