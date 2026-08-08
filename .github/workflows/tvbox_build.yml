@@ -179,7 +179,12 @@ jobs:
             -PreleaseVersion=1.10.1-fongmi \
             -PmavenRepo=/tmp/fongmi-media-repo/buildout \
             --no-daemon --stacktrace
-          ls /tmp/fongmi-media-repo/buildout/androidx/media3/ && echo "media3 fork 构建完成"
+          echo "=== 验证 AAR 文件是否存在 ==="
+          count=$(find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f 2>/dev/null | wc -l)
+          echo "Found $count .aar files"
+          find /tmp/fongmi-media-repo/buildout -name '*.aar' -type f | head -5
+          if [ "$count" -eq 0 ]; then echo "ERROR: No AAR files found!"; exit 1; fi
+          echo "media3 fork AAR 检查通过"
 
       - name: Fix Chaquo buildPython
         if: ${{ env.commit }}
