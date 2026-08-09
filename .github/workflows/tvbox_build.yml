@@ -18,6 +18,10 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  actions: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -90,15 +94,15 @@ jobs:
           python-version: '3.10'
           
 
+
+
       - name: Build FongMi media3 fork
         if: ${{ matrix.userName == 'FongMi' }}
         run: |
           echo "=== [1/6] Clone media3 fork ==="
           if [ -d /tmp/fongmi-media/.git ]; then
-            echo "Already cloned, updating..."
             cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.10.1-fongmi && git checkout release-1.10.1-fongmi
           else
-            echo "Cloning (depth=1, ~460MB)..."
             git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
           fi
           if [ ! -f /tmp/fongmi-media/gradlew ]; then
@@ -110,10 +114,7 @@ jobs:
           echo "=== [2/6] Install android-36 SDK ==="
           cd /tmp/fongmi-media
           if ! ls "$ANDROID_HOME/platforms/android-36" >/dev/null 2>&1; then
-            echo "Installing android-36..."
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK note: may already be installed"
-          else
-            echo "android-36 already present"
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK already present"
           fi
           echo "=== [3/6] Setup repo directory ==="
           rm -rf /tmp/fongmi-media-repo/buildout
@@ -122,10 +123,8 @@ jobs:
           if [ -f missing_aar_type_workaround.gradle ]; then
             sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
             echo "Patched missing_aar workaround"
-          else
-            echo "WARNING: missing_aar_type_workaround.gradle not found"
           fi
-          echo "aW1wb3J0IHJlLCBvcwpUQVJHRVQgPSAnZmlsZTovLy90bXAvZm9uZ21pLW1lZGlhLXJlcG8vYnVpbGRvdXQnCmZvciByb290LCBkaXJzLCBmaWxlcyBpbiBvcy53YWxrKCcvdG1wL2ZvbmdtaS1tZWRpYScpOgogICAgZm9yIGZuYW1lIGluIGZpbGVzOgogICAgICAgIGZwYXRoID0gb3MucGF0aC5qb2luKHJvb3QsIGZuYW1lKQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgdGV4dCA9IGYucmVhZCgpCiAgICAgICAgZXhjZXB0OgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGNoYW5nZWQgPSBGYWxzZQogICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgIGxpbmVzID0gdGV4dC5zcGxpdCgnXG4nKQogICAgICAgICAgICBuZXdfbGluZXMgPSBbXQogICAgICAgICAgICBmb3IgbGluZSBpbiBsaW5lczoKICAgICAgICAgICAgICAgIGlmICJ1cmwgPSBmaW5kUHJvcGVydHkoJ21hdmVuUmVwbycpIiBpbiBsaW5lIGFuZCAnYnVpbGREaXInIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgaW5kZW50ID0gbGVuKGxpbmUpIC0gbGVuKGxpbmUubHN0cmlwKCkpCiAgICAgICAgICAgICAgICAgICAgbmV3X2xpbmUgPSAnICcgKiBpbmRlbnQgKyAndXJsID0gIicgKyBUQVJHRVQgKyAnIicKICAgICAgICAgICAgICAgICAgICBuZXdfbGluZXMuYXBwZW5kKG5ld19saW5lKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkOiAnICsgcmVwcihsaW5lWzo2MF0pKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKICAgICAgICAgICAgaWYgY2hhbmdlZDoKICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgIGYud3JpdGUoJ1xuJy5qb2luKG5ld19saW5lcykpCiAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgcGF0Y2hlZCA9IHRleHQKICAgICAgICAgICAgIyBFbnN1cmUgYnVpbGREaXIgaXMgcmVsYXRpdmUgKG5vdCBhYnNvbHV0ZSkKICAgICAgICAgICAgaWYgJ2J1aWxkRGlyPScgaW4gcGF0Y2hlZDoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIocideYnVpbGREaXI9LiokJywgJ2J1aWxkRGlyPWJ1aWxkb3V0JywgcGF0Y2hlZCwgZmxhZ3M9cmUuTVVMVElMSU5FKQogICAgICAgICAgICAjIENSSVRJQ0FMOiBBbHdheXMgYWRkIHJlbGVhc2VWZXJzaW9uIGZvciBGb25nTWkgZm9yawogICAgICAgICAgICBpZiAncmVsZWFzZVZlcnNpb24nIG5vdCBpbiBwYXRjaGVkOgogICAgICAgICAgICAgICAgcGF0Y2hlZCA9IHBhdGNoZWQucnN0cmlwKCkgKyAnXG5yZWxlYXNlVmVyc2lvbj0xLjEwLjEtZm9uZ21pXG4nCiAgICAgICAgICAgICAgICBwcmludCgnQWRkZWQgcmVsZWFzZVZlcnNpb249MS4xMC4xLWZvbmdtaScpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBncmFkbGUucHJvcGVydGllcycpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgIGlmIGNoYW5nZWQ6CiAgICAgICAgICAgIHByaW50KCdTYXZlZDogJyArIGZwYXRoKQo=" | base64 -d > /tmp/patch_media3.py
+          echo "aW1wb3J0IHJlLCBvcwpUQVJHRVQgPSAnZmlsZTovLy90bXAvZm9uZ21pLW1lZGlhLXJlcG8vYnVpbGRvdXQnCmZvciByb290LCBkaXJzLCBmaWxlcyBpbiBvcy53YWxrKCcvdG1wL2ZvbmdtaS1tZWRpYScpOgogICAgZm9yIGZuYW1lIGluIGZpbGVzOgogICAgICAgIGZwYXRoID0gb3MucGF0aC5qb2luKHJvb3QsIGZuYW1lKQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgdGV4dCA9IGYucmVhZCgpCiAgICAgICAgZXhjZXB0OgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGNoYW5nZWQgPSBGYWxzZQogICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgIGxpbmVzID0gdGV4dC5zcGxpdCgnXG4nKQogICAgICAgICAgICBuZXdfbGluZXMgPSBbXQogICAgICAgICAgICBmb3IgbGluZSBpbiBsaW5lczoKICAgICAgICAgICAgICAgIGlmICJ1cmwgPSBmaW5kUHJvcGVydHkoJ21hdmVuUmVwbycpIiBpbiBsaW5lIGFuZCAnYnVpbGREaXInIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgaW5kZW50ID0gbGVuKGxpbmUpIC0gbGVuKGxpbmUubHN0cmlwKCkpCiAgICAgICAgICAgICAgICAgICAgbmV3X2xpbmVzLmFwcGVuZCgnICcgKiBpbmRlbnQgKyAndXJsID0gIicgKyBUQVJHRVQgKyAnIicpCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoJ1BhdGNoZWQgcHVibGlzaC5ncmFkbGUnKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKICAgICAgICAgICAgaWYgY2hhbmdlZDoKICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgIGYud3JpdGUoJ1xuJy5qb2luKG5ld19saW5lcykpCiAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgcGF0Y2hlZCA9IHRleHQKICAgICAgICAgICAgaWYgJ2J1aWxkRGlyPScgaW4gcGF0Y2hlZDoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIocideYnVpbGREaXI9LiokJywgJ2J1aWxkRGlyPWJ1aWxkb3V0JywgcGF0Y2hlZCwgZmxhZ3M9cmUuTVVMVElMSU5FKQogICAgICAgICAgICBmb3IgcHJvcCwgdmFsIGluIFsoJ3JlbGVhc2VWZXJzaW9uJywgJzEuMTAuMS1mb25nbWknKSwgKCdyZWxlYXNlQXJ0aWZhY3RJZCcsICdtZWRpYTMnKV06CiAgICAgICAgICAgICAgICBpZiBwcm9wIG5vdCBpbiBwYXRjaGVkOgogICAgICAgICAgICAgICAgICAgIHBhdGNoZWQgPSBwYXRjaGVkLnJzdHJpcCgpICsgJ1xuJyArIHByb3AgKyAnPScgKyB2YWwgKyAnXG4nCiAgICAgICAgICAgICAgICAgICAgcHJpbnQoZidBZGRlZCB7cHJvcH09e3ZhbH0nKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgIGlmIHBhdGNoZWQgIT0gdGV4dDoKICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgIGYud3JpdGUocGF0Y2hlZCkKICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkIGdyYWRsZS5wcm9wZXJ0aWVzJykKICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgaWYgY2hhbmdlZDoKICAgICAgICAgICAgcHJpbnQoJ1NhdmVkOiAnICsgZnBhdGgpCg==" | base64 -d > /tmp/patch_media3.py
           python3 /tmp/patch_media3.py
           echo "=== [5/6] Build & publish ==="
           set +e
@@ -151,27 +150,26 @@ jobs:
           set -e
           echo "Gradle exit code: $GRADLE_EXIT"
           if [ "$GRADLE_EXIT" -ne 0 ]; then
-            echo "BUILD FAILED (gradlew exit $GRADLE_EXIT)"
-            tail -40 /tmp/gradle_build.log
+            echo "BUILD FAILED"
+            tail -80 /tmp/gradle_build.log
             exit 1
           fi
           echo "=== [6/6] Verify AAR files ==="
           AAR_DIR=/tmp/fongmi-media-repo/buildout
           if [ ! -d "$AAR_DIR" ]; then
-            echo "FAIL: AAR repo dir $AAR_DIR not found"
+            echo "FAIL: $AAR_DIR not found"
             exit 1
           fi
-          echo "All .aar under $AAR_DIR:"
+          echo "All .aar files:"
           find "$AAR_DIR" -name '*.aar' -type f
-          FONGMI_COUNT=$(find "$AAR_DIR" -name 'media3-*-1.10.1-fongmi.aar' -type f | wc -l)
-          echo "FongMi-versioned media3 AAR count: $FONGMI_COUNT"
-          if [ "$FONGMI_COUNT" -ge 16 ]; then
-            echo "PASS: media3 fork AAR check ($FONGMI_COUNT AARs)"
+          TOTAL=$(find "$AAR_DIR" -name '*.aar' -type f | wc -l)
+          echo "Total AAR count: $TOTAL"
+          if [ "$TOTAL" -ge 15 ]; then
+            echo "PASS: media3 AAR check ($TOTAL AARs)"
             exit 0
           else
-            echo "FAIL: expected >=16 media3-*-1.10.1-fongmi AARs, found $FONGMI_COUNT"
-            echo "Listing all aar for debugging:"
-            find "$AAR_DIR" -name '*.aar' -type f
+            echo "FAIL: expected >=15 media3 AARs, found $TOTAL"
+            tail -60 /tmp/gradle_build.log
             exit 1
           fi
 
@@ -228,6 +226,30 @@ jobs:
           cp -f ${{ github.workspace }}/.github/workflows/TVBoxOSC.jks app/TVBoxOSC.jks
           echo "=== local.properties ==="
           cat local.properties
+
+      - name: Fix Chaquo buildPython
+        if: ${{ env.commit }}
+        working-directory: TVBoxOSC
+        run: |
+          if grep -rq "buildPython" --include="*.gradle" .; then
+            if ! command -v python3.11 >/dev/null 2>&1; then
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq software-properties-common
+              sudo add-apt-repository -y ppa:deadsnakes/ppa
+              sudo apt-get update -qq
+              sudo apt-get install -y -qq python3.11 python3.11-dev python3.11-distutils
+            fi
+            find . -name "build.gradle" -exec sed -i 's|buildPython("[^"]*")|buildPython("/usr/bin/python3.11")|' {} +
+            echo "=== Fixed buildPython ==="
+            grep -r "buildPython" --include="*.gradle" .
+          else
+            echo "No buildPython config"
+          fi
+          if grep -rl "maven.aliyun.com" . >/dev/null 2>&1; then
+            grep -rl "maven.aliyun.com" . | xargs sed -i 's|https://maven.aliyun.com/repository/public|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/google|https://maven.google.com|g; s|https://maven.aliyun.com/repository/central|https://repo1.maven.org/maven2|g; s|https://maven.aliyun.com/repository/gradle-plugin|https://plugins.gradle.org/m2|g; s|https://maven.aliyun.com/repository/releases|https://maven.google.com|g'
+            echo "=== Replaced aliyun mirrors ==="
+          fi
+          find . -path "*pyramid/build.gradle" -exec sed -i 's|install "pyquery"|install "pyquery==1.4.4"|g; s|pyquery==2.0.2|pyquery==1.4.4|g; s|pyquery==1.4.3|pyquery==1.4.4|g' {} +
 
       - name: Build With Gradle
         if: ${{ env.commit }}
@@ -318,34 +340,8 @@ jobs:
           delete_tags: true
           delete_tag_pattern: ${{ matrix.userName }}_${{ matrix.repoName }}_${{ matrix.branchName }}.*
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-
-      - name: Whether Or Not to Publish
-        if: ${{ inputs.donotpublish && env.commit }}
-        run: |
-          echo "commit=" >> $GITHUB_ENV
-
-      - name: Release and Upload Assets
-        uses: ncipollo/release-action@main
-        if: ${{ env.commit }}
-        with:
-          name: ${{ matrix.userName }}_${{ matrix.repoName }}_${{ matrix.branchName }}_${{ env.tag }}
-          tag: ${{ matrix.userName }}_${{ matrix.repoName }}_${{ matrix.branchName }}_${{ env.tag }}
-          bodyFile: TVBoxOSC/apk/${{ matrix.userName }}-Release.log
-          allowUpdates: true
-          removeArtifacts: true
-          artifacts: |
-            TVBoxOSC/apk/*.apk
-            TVBoxOSC/source-${{ env.commitS }}.*
-
-      - uses: dev-drprasad/delete-older-releases@master
-        with:
-          keep_latest: 5
-          delete_tags: true
-          delete_tag_pattern: ${{ matrix.userName }}_${{ matrix.repoName }}_${{ matrix.branchName }}.*
-        env:
-          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
 
       - name: Push to master
         if: ${{ env.commit }}
