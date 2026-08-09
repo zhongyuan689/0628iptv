@@ -183,6 +183,11 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
+          # 删除原有的 media3-ui-danmaku:1.8.0（Step 7 已构建 fork 版本 1.10.1-fongmi，Leanback variant 仍找 1.8.0 会导致 Could not find androidx.media3:media3-ui-danmaku:1.8.0）
+          if [ -f "app/build.gradle" ]; then
+            sed -i '/implementation.*androidx.media3:media3-ui-danmaku:/d' app/build.gradle
+          fi
+          
           # 统一处理 crosswalk 源
           if grep -q 'crosswalk' build.gradle; then
             sed -i "/crosswalk/a\        maven { url 'https://o0halflife0o.github.io/crosswalk/releases/crosswalk/android/maven2' }" build.gradle
