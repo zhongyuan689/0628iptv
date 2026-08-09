@@ -89,6 +89,92 @@ jobs:
         with:
           python-version: '3.10'
           
+
+      - name: Build FongMi media3 fork
+        if: ${ matrix.user == 'FongMi' }
+        run: |
+          echo "=== [1/6] Clone media3 fork ==="
+          if [ -d /tmp/fongmi-media/.git ]; then
+            echo "Already cloned, updating..."
+            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.10.1-fongmi && git checkout release-1.10.1-fongmi
+          else
+            echo "Cloning (depth=1, ~460MB)..."
+            git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
+          fi
+          if [ ! -f /tmp/fongmi-media/gradlew ]; then
+            echo "FATAL: clone failed!"
+            ls -la /tmp/fongmi-media/ 2>&1 | head -20
+            exit 1
+          fi
+          echo "[1/6] Clone OK"
+          echo "=== [2/6] Install android-36 SDK ==="
+          cd /tmp/fongmi-media
+          if ! ls "$ANDROID_HOME/platforms/android-36" >/dev/null 2>&1; then
+            echo "Installing android-36..."
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK note: may already be installed"
+          else
+            echo "android-36 already present"
+          fi
+          echo "=== [3/6] Setup repo directory ==="
+          rm -rf /tmp/fongmi-media-repo/buildout
+          mkdir -p /tmp/fongmi-media-repo/buildout
+          echo "=== [4/6] Patch gradle files ==="
+          if [ -f missing_aar_type_workaround.gradle ]; then
+            sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
+            echo "Patched missing_aar workaround"
+          else
+            echo "WARNING: missing_aar_type_workaround.gradle not found"
+          fi
+          echo "aW1wb3J0IHJlLCBvcwpUQVJHRVQgPSAnZmlsZTovLy90bXAvZm9uZ21pLW1lZGlhLXJlcG8vYnVpbGRvdXQnCmZvciByb290LCBkaXJzLCBmaWxlcyBpbiBvcy53YWxrKCcvdG1wL2ZvbmdtaS1tZWRpYScpOgogICAgZm9yIGZuYW1lIGluIGZpbGVzOgogICAgICAgIGZwYXRoID0gb3MucGF0aC5qb2luKHJvb3QsIGZuYW1lKQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgdGV4dCA9IGYucmVhZCgpCiAgICAgICAgZXhjZXB0OgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGNoYW5nZWQgPSBGYWxzZQogICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgIGxpbmVzID0gdGV4dC5zcGxpdCgnXG4nKQogICAgICAgICAgICBuZXdfbGluZXMgPSBbXQogICAgICAgICAgICBmb3IgbGluZSBpbiBsaW5lczoKICAgICAgICAgICAgICAgIGlmICJ1cmwgPSBmaW5kUHJvcGVydHkoJ21hdmVuUmVwbycpIiBpbiBsaW5lIGFuZCAnYnVpbGREaXInIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgaW5kZW50ID0gbGVuKGxpbmUpIC0gbGVuKGxpbmUubHN0cmlwKCkpCiAgICAgICAgICAgICAgICAgICAgbmV3X2xpbmUgPSAnICcgKiBpbmRlbnQgKyAndXJsID0gIicgKyBUQVJHRVQgKyAnIicKICAgICAgICAgICAgICAgICAgICBuZXdfbGluZXMuYXBwZW5kKG5ld19saW5lKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkOiAnICsgcmVwcihsaW5lWzo2MF0pKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKICAgICAgICAgICAgaWYgY2hhbmdlZDoKICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgIGYud3JpdGUoJ1xuJy5qb2luKG5ld19saW5lcykpCiAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgcGF0Y2hlZCA9IHRleHQKICAgICAgICAgICAgIyBFbnN1cmUgYnVpbGREaXIgaXMgcmVsYXRpdmUgKG5vdCBhYnNvbHV0ZSkKICAgICAgICAgICAgaWYgJ2J1aWxkRGlyPScgaW4gcGF0Y2hlZDoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIocideYnVpbGREaXI9LiokJywgJ2J1aWxkRGlyPWJ1aWxkb3V0JywgcGF0Y2hlZCwgZmxhZ3M9cmUuTVVMVElMSU5FKQogICAgICAgICAgICAjIENSSVRJQ0FMOiBBbHdheXMgYWRkIHJlbGVhc2VWZXJzaW9uIGZvciBGb25nTWkgZm9yawogICAgICAgICAgICBpZiAncmVsZWFzZVZlcnNpb24nIG5vdCBpbiBwYXRjaGVkOgogICAgICAgICAgICAgICAgcGF0Y2hlZCA9IHBhdGNoZWQucnN0cmlwKCkgKyAnXG5yZWxlYXNlVmVyc2lvbj0xLjEwLjEtZm9uZ21pXG4nCiAgICAgICAgICAgICAgICBwcmludCgnQWRkZWQgcmVsZWFzZVZlcnNpb249MS4xMC4xLWZvbmdtaScpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBncmFkbGUucHJvcGVydGllcycpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgIGlmIGNoYW5nZWQ6CiAgICAgICAgICAgIHByaW50KCdTYXZlZDogJyArIGZwYXRoKQo=" | base64 -d > /tmp/patch_media3.py
+          python3 /tmp/patch_media3.py
+          echo "=== [5/6] Build & publish ==="
+          set +e
+          ./gradlew \
+            :lib-common:publishReleasePublicationToMavenRepository \
+            :lib-container:publishReleasePublicationToMavenRepository \
+            :lib-database:publishReleasePublicationToMavenRepository \
+            :lib-datasource:publishReleasePublicationToMavenRepository \
+            :lib-datasource-okhttp:publishReleasePublicationToMavenRepository \
+            :lib-decoder:publishReleasePublicationToMavenRepository \
+            :lib-effect:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-dash:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-hls:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-rtsp:publishReleasePublicationToMavenRepository \
+            :lib-exoplayer-smoothstreaming:publishReleasePublicationToMavenRepository \
+            :lib-extractor:publishReleasePublicationToMavenRepository \
+            :lib-session:publishReleasePublicationToMavenRepository \
+            :lib-ui:publishReleasePublicationToMavenRepository \
+            :lib-ui-danmaku:publishReleasePublicationToMavenRepository \
+            --no-daemon --stacktrace > /tmp/gradle_build.log 2>&1
+          GRADLE_EXIT=$?
+          set -e
+          echo "Gradle exit code: $GRADLE_EXIT"
+          if [ "$GRADLE_EXIT" -ne 0 ]; then
+            echo "BUILD FAILED (gradlew exit $GRADLE_EXIT)"
+            tail -40 /tmp/gradle_build.log
+            exit 1
+          fi
+          echo "=== [6/6] Verify AAR files ==="
+          AAR_DIR=/tmp/fongmi-media-repo/buildout
+          if [ ! -d "$AAR_DIR" ]; then
+            echo "FAIL: AAR repo dir $AAR_DIR not found"
+            exit 1
+          fi
+          echo "All .aar under $AAR_DIR:"
+          find "$AAR_DIR" -name '*.aar' -type f
+          FONGMI_COUNT=$(find "$AAR_DIR" -name 'media3-*-1.10.1-fongmi.aar' -type f | wc -l)
+          echo "FongMi-versioned media3 AAR count: $FONGMI_COUNT"
+          if [ "$FONGMI_COUNT" -ge 16 ]; then
+            echo "PASS: media3 fork AAR check ($FONGMI_COUNT AARs)"
+            exit 0
+          else
+            echo "FAIL: expected >=16 media3-*-1.10.1-fongmi AARs, found $FONGMI_COUNT"
+            echo "Listing all aar for debugging:"
+            find "$AAR_DIR" -name '*.aar' -type f
+            exit 1
+          fi
+
       - name: Extra Modify
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
@@ -300,88 +386,4 @@ jobs:
 
 
 
-      - name: Build FongMi media3 fork
-        if: ${{ matrix.user == 'FongMi' }
-        run: |
-          echo "=== [1/6] Clone media3 fork ==="
-          if [ -d /tmp/fongmi-media/.git ]; then
-            echo "Already cloned, updating..."
-            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.10.1-fongmi && git checkout release-1.10.1-fongmi
-          else
-            echo "Cloning (depth=1, ~460MB)..."
-            git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
-          fi
-          if [ ! -f /tmp/fongmi-media/gradlew ]; then
-            echo "FATAL: clone failed!"
-            ls -la /tmp/fongmi-media/ 2>&1 | head -20
-            exit 1
-          fi
-          echo "[1/6] Clone OK"
-          echo "=== [2/6] Install android-36 SDK ==="
-          cd /tmp/fongmi-media
-          if ! ls "$ANDROID_HOME/platforms/android-36" >/dev/null 2>&1; then
-            echo "Installing android-36..."
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" 2>&1 | tail -5 || echo "SDK note: may already be installed"
-          else
-            echo "android-36 already present"
-          fi
-          echo "=== [3/6] Setup repo directory ==="
-          rm -rf /tmp/fongmi-media-repo/buildout
-          mkdir -p /tmp/fongmi-media-repo/buildout
-          echo "=== [4/6] Patch gradle files ==="
-          if [ -f missing_aar_type_workaround.gradle ]; then
-            sed -i '/throw new IllegalStateException(/d; /is not on the JAR or AAR list/d' missing_aar_type_workaround.gradle
-            echo "Patched missing_aar workaround"
-          else
-            echo "WARNING: missing_aar_type_workaround.gradle not found"
-          fi
-          echo "aW1wb3J0IHJlLCBvcwpUQVJHRVQgPSAnZmlsZTovLy90bXAvZm9uZ21pLW1lZGlhLXJlcG8vYnVpbGRvdXQnCmZvciByb290LCBkaXJzLCBmaWxlcyBpbiBvcy53YWxrKCcvdG1wL2ZvbmdtaS1tZWRpYScpOgogICAgZm9yIGZuYW1lIGluIGZpbGVzOgogICAgICAgIGZwYXRoID0gb3MucGF0aC5qb2luKHJvb3QsIGZuYW1lKQogICAgICAgIHRyeToKICAgICAgICAgICAgd2l0aCBvcGVuKGZwYXRoLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgdGV4dCA9IGYucmVhZCgpCiAgICAgICAgZXhjZXB0OgogICAgICAgICAgICBjb250aW51ZQogICAgICAgIGNoYW5nZWQgPSBGYWxzZQogICAgICAgIGlmIGZuYW1lID09ICdwdWJsaXNoLmdyYWRsZSc6CiAgICAgICAgICAgIGxpbmVzID0gdGV4dC5zcGxpdCgnXG4nKQogICAgICAgICAgICBuZXdfbGluZXMgPSBbXQogICAgICAgICAgICBmb3IgbGluZSBpbiBsaW5lczoKICAgICAgICAgICAgICAgIGlmICJ1cmwgPSBmaW5kUHJvcGVydHkoJ21hdmVuUmVwbycpIiBpbiBsaW5lIGFuZCAnYnVpbGREaXInIGluIGxpbmU6CiAgICAgICAgICAgICAgICAgICAgaW5kZW50ID0gbGVuKGxpbmUpIC0gbGVuKGxpbmUubHN0cmlwKCkpCiAgICAgICAgICAgICAgICAgICAgbmV3X2xpbmUgPSAnICcgKiBpbmRlbnQgKyAndXJsID0gIicgKyBUQVJHRVQgKyAnIicKICAgICAgICAgICAgICAgICAgICBuZXdfbGluZXMuYXBwZW5kKG5ld19saW5lKQogICAgICAgICAgICAgICAgICAgIHByaW50KCdQYXRjaGVkOiAnICsgcmVwcihsaW5lWzo2MF0pKQogICAgICAgICAgICAgICAgICAgIGNoYW5nZWQgPSBUcnVlCiAgICAgICAgICAgICAgICBlbHNlOgogICAgICAgICAgICAgICAgICAgIG5ld19saW5lcy5hcHBlbmQobGluZSkKICAgICAgICAgICAgaWYgY2hhbmdlZDoKICAgICAgICAgICAgICAgIHdpdGggb3BlbihmcGF0aCwgJ3cnLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgICAgICAgICAgICAgICAgIGYud3JpdGUoJ1xuJy5qb2luKG5ld19saW5lcykpCiAgICAgICAgaWYgZm5hbWUgPT0gJ2dyYWRsZS5wcm9wZXJ0aWVzJzoKICAgICAgICAgICAgcGF0Y2hlZCA9IHRleHQKICAgICAgICAgICAgIyBFbnN1cmUgYnVpbGREaXIgaXMgcmVsYXRpdmUgKG5vdCBhYnNvbHV0ZSkKICAgICAgICAgICAgaWYgJ2J1aWxkRGlyPScgaW4gcGF0Y2hlZDoKICAgICAgICAgICAgICAgIHBhdGNoZWQgPSByZS5zdWIocideYnVpbGREaXI9LiokJywgJ2J1aWxkRGlyPWJ1aWxkb3V0JywgcGF0Y2hlZCwgZmxhZ3M9cmUuTVVMVElMSU5FKQogICAgICAgICAgICAjIENSSVRJQ0FMOiBBbHdheXMgYWRkIHJlbGVhc2VWZXJzaW9uIGZvciBGb25nTWkgZm9yawogICAgICAgICAgICBpZiAncmVsZWFzZVZlcnNpb24nIG5vdCBpbiBwYXRjaGVkOgogICAgICAgICAgICAgICAgcGF0Y2hlZCA9IHBhdGNoZWQucnN0cmlwKCkgKyAnXG5yZWxlYXNlVmVyc2lvbj0xLjEwLjEtZm9uZ21pXG4nCiAgICAgICAgICAgICAgICBwcmludCgnQWRkZWQgcmVsZWFzZVZlcnNpb249MS4xMC4xLWZvbmdtaScpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgICAgICBpZiBwYXRjaGVkICE9IHRleHQ6CiAgICAgICAgICAgICAgICB3aXRoIG9wZW4oZnBhdGgsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgICAgICAgICAgICAgICAgICBmLndyaXRlKHBhdGNoZWQpCiAgICAgICAgICAgICAgICBwcmludCgnUGF0Y2hlZCBncmFkbGUucHJvcGVydGllcycpCiAgICAgICAgICAgICAgICBjaGFuZ2VkID0gVHJ1ZQogICAgICAgIGlmIGNoYW5nZWQ6CiAgICAgICAgICAgIHByaW50KCdTYXZlZDogJyArIGZwYXRoKQo=" | base64 -d > /tmp/patch_media3.py
-          python3 /tmp/patch_media3.py
-          echo "=== [5/6] Build & publish ==="
-          set +e
-          ./gradlew \
-            :lib-common:publishReleasePublicationToMavenRepository \
-            :lib-container:publishReleasePublicationToMavenRepository \
-            :lib-database:publishReleasePublicationToMavenRepository \
-            :lib-datasource:publishReleasePublicationToMavenRepository \
-            :lib-datasource-okhttp:publishReleasePublicationToMavenRepository \
-            :lib-decoder:publishReleasePublicationToMavenRepository \
-            :lib-effect:publishReleasePublicationToMavenRepository \
-            :lib-exoplayer:publishReleasePublicationToMavenRepository \
-            :lib-exoplayer-dash:publishReleasePublicationToMavenRepository \
-            :lib-exoplayer-hls:publishReleasePublicationToMavenRepository \
-            :lib-exoplayer-rtsp:publishReleasePublicationToMavenRepository \
-            :lib-exoplayer-smoothstreaming:publishReleasePublicationToMavenRepository \
-            :lib-extractor:publishReleasePublicationToMavenRepository \
-            :lib-session:publishReleasePublicationToMavenRepository \
-            :lib-ui:publishReleasePublicationToMavenRepository \
-            :lib-ui-danmaku:publishReleasePublicationToMavenRepository \
-            --no-daemon --stacktrace > /tmp/gradle_build.log 2>&1
-          GRADLE_EXIT=$?
-          set -e
-          echo "Gradle exit code: $GRADLE_EXIT"
-          if [ "$GRADLE_EXIT" -ne 0 ]; then
-            echo "BUILD FAILED (gradlew exit $GRADLE_EXIT)"
-            tail -40 /tmp/gradle_build.log
-            exit 1
-          fi
-          echo "=== [6/6] Verify AAR files ==="
-          AAR_DIR=/tmp/fongmi-media-repo/buildout
-          if [ ! -d "$AAR_DIR" ]; then
-            echo "FAIL: AAR repo dir $AAR_DIR not found"
-            exit 1
-          fi
-          echo "All .aar under $AAR_DIR:"
-          find "$AAR_DIR" -name '*.aar' -type f
-          FONGMI_COUNT=$(find "$AAR_DIR" -name 'media3-*-1.10.1-fongmi.aar' -type f | wc -l)
-          echo "FongMi-versioned media3 AAR count: $FONGMI_COUNT"
-          if [ "$FONGMI_COUNT" -ge 16 ]; then
-            echo "PASS: media3 fork AAR check ($FONGMI_COUNT AARs)"
-            exit 0
-          else
-            echo "FAIL: expected >=16 media3-*-1.10.1-fongmi AARs, found $FONGMI_COUNT"
-            echo "Listing all aar for debugging:"
-            find "$AAR_DIR" -name '*.aar' -type f
-            exit 1
-          fi
-# === END FongMi media3 fork build steps ===
+
