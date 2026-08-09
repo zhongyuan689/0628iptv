@@ -301,7 +301,7 @@ jobs:
 
 
       - name: Build FongMi media3 fork
-        if: ${ matrix.user == 'FongMi' }
+        if: ${{ matrix.user == 'FongMi' }
         run: |
           echo "=== [1/6] Clone media3 fork ==="
           if [ -d /tmp/fongmi-media/.git ]; then
