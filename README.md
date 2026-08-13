@@ -111,7 +111,7 @@
 | [FongMi/TV (内置源版)](https://github.com/FongMi/TV) | release | 171a41b... | 2026-01-13 04:34:53 |
 | [q215613905/TVBoxOS](https://github.com/q215613905/TVBoxOS) | main | 02f05c8... | 2026-08-13 04:59:25 |
 | [takagen99/Box](https://github.com/takagen99/Box) | main | 258a5fe... | 2026-08-13 05:12:09 |
-| [mlabalabala/box](https://github.com/mlabalabala/box) | main | c5dc2b9... | 2026-08-13 04:52:45 |
+| [mlabalabala/box](https://github.com/mlabalabala/box) | main | c5dc2b9... | 2026-08-13 19:59:24 |
 
 *同步数据更新于: 2026-06-22 05:22:35*
 
