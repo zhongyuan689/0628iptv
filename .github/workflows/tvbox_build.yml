@@ -23,6 +23,8 @@ permissions:
   actions: write
 
 jobs:
+notifications:
+  email: false
   build:
     runs-on: ubuntu-latest
     strategy:
