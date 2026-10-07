@@ -101,7 +101,7 @@ jobs:
         run: |
           echo "=== [1/6] Clone media3 fork ==="
           if [ -d /tmp/fongmi-media/.git ]; then
-            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.11.0-fongmi && git checkout release-1.10.1-fongmi
+            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.11.0-fongmi && git checkout release-1.11.0-fongmi
           else
             git clone --depth 1 --branch release-1.11.0-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
           fi
@@ -183,7 +183,7 @@ jobs:
         if: ${{ env.commit }}
         working-directory: TVBoxOSC
         run: |
-          # 删除原有的 media3-ui-danmaku:1.8.0（Step 7 已构建 fork 版本 1.10.1-fongmi，Leanback variant 仍找 1.8.0 会导致 Could not find androidx.media3:media3-ui-danmaku:1.8.0）
+          # 删除原有的 media3-ui-danmaku:1.8.0（Step 7 已构建 fork 版本 1.11.0-fongmi，Leanback variant 仍找 1.8.0 会导致 Could not find androidx.media3:media3-ui-danmaku:1.8.0）
           if [ -f "app/build.gradle" ]; then
             sed -i '/implementation.*androidx.media3:media3-ui-danmaku:/d' app/build.gradle
           fi
