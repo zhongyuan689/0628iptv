@@ -280,6 +280,24 @@ jobs:
         working-directory: TVBoxOSC
         run: |
           chmod +x gradlew
+          # 上游部分仓库(FongMi/TV)提交了 gradle-daemon-jvm.properties，要求 JetBrains Runtime 21，
+          # 其 foojay 固定下载地址已失效(HTTP 400)，导致 Gradle 无法启动 daemon。
+          # 处理方式：去掉 vendor 与固定 URL，改用本机任意 JDK 21；若本机没有 21 则直接删除约束。
+          if [ -f gradle/gradle-daemon-jvm.properties ]; then
+            echo "=== gradle-daemon-jvm.properties (原始) ==="
+            cat gradle/gradle-daemon-jvm.properties
+            JDK21=""
+            for d in /usr/lib/jvm/temurin-21-jdk-amd64 /usr/lib/jvm/java-21-openjdk-amd64 "$JAVA_HOME_21_X64"; do
+              if [ -n "$d" ] && [ -d "$d" ]; then JDK21="$d"; break; fi
+            done
+            if [ -n "$JDK21" ]; then
+              sed -i '/^toolchainUrl\./d; /^toolchainVendor=/d' gradle/gradle-daemon-jvm.properties
+              echo "daemon JVM: 改用任意厂商 JDK 21 ($JDK21)"
+            else
+              rm -f gradle/gradle-daemon-jvm.properties
+              echo "daemon JVM: 本机无 JDK 21，删除约束，改用 JAVA_HOME"
+            fi
+          fi
           echo "org.gradle.daemon=true" >> gradle.properties
           echo "org.gradle.parallel=true" >> gradle.properties
           echo "org.gradle.caching=true" >> gradle.properties
