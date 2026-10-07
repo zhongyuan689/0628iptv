@@ -101,9 +101,9 @@ jobs:
         run: |
           echo "=== [1/6] Clone media3 fork ==="
           if [ -d /tmp/fongmi-media/.git ]; then
-            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.10.1-fongmi && git checkout release-1.10.1-fongmi
+            cd /tmp/fongmi-media && git fetch --depth 1 origin release-1.11.0-fongmi && git checkout release-1.10.1-fongmi
           else
-            git clone --depth 1 --branch release-1.10.1-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
+            git clone --depth 1 --branch release-1.11.0-fongmi --single-branch https://github.com/FongMi/media.git /tmp/fongmi-media 2>&1 | tail -5
           fi
           if [ ! -f /tmp/fongmi-media/gradlew ]; then
             echo "FATAL: clone failed!"
