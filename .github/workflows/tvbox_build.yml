@@ -447,7 +447,7 @@ jobs:
           sed -i "s/update at .*/update at ${current_time}/" README.md
           
           git add --all
-          git commit -m "Update ${{ matrix.userName }}/${{ matrix.repoName }} to ${{ env.commit }} at ${current_time}"
+          git commit -m "Update ${{ matrix.userName }}/${{ matrix.repoName }} to ${{ env.commit }} at ${current_time}" || true
           git push -u -f origin master
 
 
